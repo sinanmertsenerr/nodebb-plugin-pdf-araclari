@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>pdf-araclari harness</title>
+	<link rel="icon" href="data:,">
+	<!-- NodeBB dışında test sayfası: build.mjs bunu static/dist/harness.html olarak gerçek dosya adlarıyla üretir -->
+	<!-- Forumdaki temel stil (Bootstrap 5) ve yazı tipi: araç forumun CSS'inden etkilenirken de sınanır -->
+	<link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+	<link rel="stylesheet" href="../../node_modules/@fontsource-variable/inter/index.css">
+	<link rel="stylesheet" href="./{{css}}">
+	<style>
+		:root { --bs-body-font-family: "Inter Variable", Inter, system-ui, sans-serif; --bs-body-color: #1f272b; --bs-body-bg: #fff; --bs-border-color: rgba(16, 32, 42, .14); }
+		[data-theme="dark"] { --bs-body-color: #e3e6e8; --bs-body-bg: #1c1d20; --bs-border-color: rgba(255, 255, 255, .12); color-scheme: dark; }
+		body { margin: 0; padding: 16px; font-family: var(--bs-body-font-family); background: var(--bs-body-bg); color: var(--bs-body-color); }
+		.harness-note { margin: 0 8px 8px; font-size: 13px; color: #4d5962; }
+		[data-theme="dark"] .harness-note { color: #b4bcc2; }
+	</style>
+	<script src="./{{js}}"></script>
+</head>
+<body>
+	<p class="harness-note">Test sayfası: forumun dışında açılır. Adres #araç&theme=dark&ui=en biçiminde (ör. #split&theme=dark).</p>
+	<div id="pdf-yu-root" class="pdf-yu-page"></div>
+	<script>
+		// Test: indirilen dosyayı yerel test sunucusuna da yazar (test/out/downloads/), böylece çıktı betikle doğrulanır
+		document.addEventListener('click', function (e) {
+			var a = e.target && e.target.closest && e.target.closest('a[download]');
+			if (!a || a.href.indexOf('blob:') !== 0) return;
+			fetch(a.href).then(function (r) { return r.blob(); }).then(function (b) {
+				return fetch('/__save/' + encodeURIComponent(a.download), { method: 'PUT', body: b });
+			}).then(function () { window.__saved = (window.__saved || []).concat(a.download); });
+		}, true);
+		(function () {
+			var params = new URLSearchParams(location.hash.replace(/^#/, '').replace(/^([a-z0-9]+)/i, 'tool=$1'));
+			if (params.get('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+			window.YuPDF.mount(document.getElementById('pdf-yu-root'), { uid: 1, relativePath: '', csrf: '', uiLang: params.get('ui') || 'tr' });
+		}());
+	</script>
+</body>
+</html>
