@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { closePdf, getPdfjs, isPdf, openPdf, renderPage, MAX_MB } from '../pdf.js';
 import { notify } from '../notify.js';
 import { Icon } from './icons.jsx';
+import { useStepMark } from './steps.jsx';
 
 let nextId = 1;
 export const uid = () => `f${nextId++}`;
@@ -17,6 +18,7 @@ export function Dropzone({ t, many, onFiles, compact, kind = 'pdf', capture }) {
 	const input = useRef(null);
 	const [over, setOver] = useState(false);
 	const k = KINDS[kind];
+	useStepMark('start', !compact);
 	const take = (list) => {
 		const files = Array.from(list || []);
 		if (files.length) onFiles(many ? files : files.slice(0, 1));
@@ -28,9 +30,9 @@ export function Dropzone({ t, many, onFiles, compact, kind = 'pdf', capture }) {
 			onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOver(false); }}
 			onDrop={(e) => { e.preventDefault(); setOver(false); take(e.dataTransfer && e.dataTransfer.files); }}
 		>
-			{!compact && <Icon name={kind === 'image' ? 'image' : 'upload'} size={32} />}
+			{!compact && <span class="pdf-drop-ico" aria-hidden="true"><Icon name={kind === 'image' ? 'image-plus' : 'upload'} size={30} /></span>}
 			{compact && !over ? null : <p class="pdf-drop-title">{over ? t('drop.over') : t(many ? k.many : k.one)}</p>}
-			<button type="button" class={compact ? 'pdfb pdfb--secondary' : 'pdfb pdfb--primary'} onClick={() => input.current && input.current.click()}>
+			<button type="button" class={compact ? 'pdfb pdfb--secondary' : 'pdfb pdfb--primary pdfb--lg'} onClick={() => input.current && input.current.click()}>
 				{compact ? <Icon name="plus" size={18} /> : null}{compact ? t(k.add) : t(k.pick)}
 			</button>
 			<input ref={input} class="pdf-visually-hidden" type="file" accept={k.accept} capture={capture} multiple={many} tabIndex={-1} aria-label={t(k.pick)}
@@ -87,6 +89,7 @@ export function ErrorLine({ children }) {
 export function ResultBand({ t, title, meta, onDownload, onAgain, children }) {
 	const ref = useRef(null);
 	const heading = title || t('res.ready');
+	useStepMark('done');
 	useEffect(() => {
 		if (ref.current) ref.current.focus();
 		notify({ type: 'success', title: heading, message: meta || '' });
@@ -110,6 +113,7 @@ export function ResultBand({ t, title, meta, onDownload, onAgain, children }) {
 export function PasswordPrompt({ t, name, wrong, onSubmit, inline }) {
 	const [value, setValue] = useState('');
 	const id = useRef(uid());
+	useStepMark('start', !inline);
 	return (
 		<form class="pdf-password" onSubmit={(e) => { e.preventDefault(); if (value) onSubmit(value); }}>
 			{inline ? null : <p class="pdf-password-title"><Icon name="lock" size={18} />{t('pw.locked', name)}</p>}

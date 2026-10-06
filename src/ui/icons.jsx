@@ -22,6 +22,7 @@ const ICONS = {
 	'circle-check': { l: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>', t: '<circle cx="12" cy="12" r="10"/>' },
 	copy: { l: '<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>', t: '<rect width="14" height="14" x="8" y="8" rx="2"/>' },
 	'zoom-in': { l: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6"/><path d="M8 11h6"/>', t: '<circle cx="11" cy="11" r="8"/>' },
+	search: { l: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>', t: '<circle cx="11" cy="11" r="8"/>' },
 	'zoom-out': { l: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/>', t: '<circle cx="11" cy="11" r="8"/>' },
 
 	// --- Araçlar ---
