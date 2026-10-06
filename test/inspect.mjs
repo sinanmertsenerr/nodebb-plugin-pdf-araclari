@@ -1,5 +1,5 @@
 // Test yardımcıları: PDF'in sayfalarını okur, ZIP'i açar. verify-pdf.mjs ve e2e testi kullanır.
-import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { Util, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 // -> { pages, rows: [{ n, rotate, w, h, text }] }
 export async function inspectPdf(bytes, password) {
@@ -8,9 +8,16 @@ export async function inspectPdf(bytes, password) {
 	const rows = [];
 	for (let n = 1; n <= doc.numPages; n += 1) {
 		const page = await doc.getPage(n);
-		const text = (await page.getTextContent()).items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+		const { items } = await page.getTextContent();
+		const text = items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
 		const [x0, y0, x1, y1] = page.view;
-		rows.push({ n, rotate: page.rotate, w: Math.round(x1 - x0), h: Math.round(y1 - y0), text });
+		// Görünen sayfadaki konum (sol üstten, y aşağı) ve yön: döndürülmüş sayfada numara/filigran doğru yere düştü mü
+		const viewport = page.getViewport({ scale: 1 });
+		const spots = items.filter(i => i.str.trim()).map((i) => {
+			const m = Util.transform(viewport.transform, i.transform);
+			return { s: i.str, x: Math.round(m[4]), y: Math.round(m[5]), angle: Math.round((Math.atan2(m[1], m[0]) * 180) / Math.PI) };
+		});
+		rows.push({ n, rotate: page.rotate, w: Math.round(x1 - x0), h: Math.round(y1 - y0), vw: Math.round(viewport.width), vh: Math.round(viewport.height), text, spots });
 	}
 	const pages = doc.numPages;
 	await task.destroy();

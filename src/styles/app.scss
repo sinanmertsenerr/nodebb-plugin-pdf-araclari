@@ -1303,6 +1303,95 @@
     min-width: 0;
 }
 
+// ---------- Sayfa numarası: konum seçici ve önizleme ----------
+.pdf-pospick {
+    margin: 0 0 4px;
+    padding: 0;
+    border: 0;
+}
+
+.pdf-pospick-page {
+    position: relative;
+    width: 92px;
+    height: 124px;
+    border: 1px solid var(--pdfu-line);
+    border-radius: 6px;
+    background-color: var(--pdfu-field);
+}
+
+.pdf-pos {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    border-radius: 6px;
+    cursor: pointer;
+
+    &::after {
+        content: "";
+        width: 12px;
+        height: 6px;
+        border-radius: 2px;
+        background-color: var(--pdfu-line);
+        transition: background-color .15s ease;
+    }
+
+    &:hover::after {
+        background-color: rgba(var(--pdfu-accent-rgb), .5);
+    }
+
+    &.is-on::after {
+        background-color: var(--pdfu-accent);
+    }
+
+    &:has(input:focus-visible) {
+        outline: 2px solid var(--pdfu-accent);
+    }
+
+    input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+.pdf-pos--tl { top: 2px; left: 2px; }
+.pdf-pos--tc { top: 2px; left: 31px; }
+.pdf-pos--tr { top: 2px; right: 2px; }
+.pdf-pos--bl { bottom: 2px; left: 2px; }
+.pdf-pos--bc { bottom: 2px; left: 31px; }
+.pdf-pos--br { bottom: 2px; right: 2px; }
+
+.pdf-input--short {
+    max-width: 120px;
+}
+
+// Önizlemede numara: belgedeki yerine yüzde/ölçekli konumla
+.pdf-pn-mark {
+    position: absolute;
+    color: #22272b;
+    font-family: var(--bs-body-font-family, Inter, sans-serif);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.pdf-pn-mark--tl, .pdf-pn-mark--tc, .pdf-pn-mark--tr { top: var(--pdf-m); }
+.pdf-pn-mark--bl, .pdf-pn-mark--bc, .pdf-pn-mark--br { bottom: var(--pdf-m); }
+.pdf-pn-mark--tl, .pdf-pn-mark--bl { left: var(--pdf-m); }
+.pdf-pn-mark--tr, .pdf-pn-mark--br { right: var(--pdf-m); }
+.pdf-pn-mark--tc, .pdf-pn-mark--bc { left: 50%; transform: translateX(-50%); }
+
+.pdf-wm-mark {
+    position: absolute;
+    font-family: var(--bs-body-font-family, Inter, sans-serif);
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    transform-origin: 50% 50%;
+}
+
 // ---------- Alt çubuk: ana düğme her zaman görünür ----------
 .pdf-actions {
     position: sticky;

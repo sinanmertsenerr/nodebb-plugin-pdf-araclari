@@ -10,6 +10,8 @@ import { PdfToImg } from './pdf2img.jsx';
 import { PdfToTxt } from './pdf2txt.jsx';
 import { ImgConv } from './imgconv.jsx';
 import { ImgShrink } from './imgshrink.jsx';
+import { PageNum } from './pagenum.jsx';
+import { Watermark } from './watermark.jsx';
 
 export const GROUPS = ['basic', 'convert', 'edit', 'secure', 'student', 'scan'];
 
@@ -28,8 +30,8 @@ export const TOOLS = [
 
 	{ id: 'edit', group: 'edit', icon: 'edit' },
 	{ id: 'sign', group: 'edit', icon: 'signature' },
-	{ id: 'pagenum', group: 'edit', icon: 'hash' },
-	{ id: 'watermark', group: 'edit', icon: 'stamp' },
+	{ id: 'pagenum', group: 'edit', icon: 'hash', component: PageNum },
+	{ id: 'watermark', group: 'edit', icon: 'stamp', component: Watermark },
 
 	{ id: 'protect', group: 'secure', icon: 'lock', component: Protect },
 	{ id: 'unlock', group: 'secure', icon: 'unlock', component: Unlock },

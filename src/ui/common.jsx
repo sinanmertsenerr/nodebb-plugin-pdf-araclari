@@ -275,6 +275,20 @@ export function Swatches({ legend, colors, value, onChange }) {
 	);
 }
 
+// Sayfanın görünen ölçüsü (pt; /Rotate uygulanmış): önizlemede yazı boyutunu ve konumu ölçeklemek için
+export function usePageSize(doc, pageNumber) {
+	const [size, setSize] = useState(null);
+	useEffect(() => {
+		let dead = false;
+		doc.getPage(pageNumber).then((page) => {
+			const v = page.getViewport({ scale: 1 });
+			if (!dead) setSize({ w: v.width, h: v.height });
+		}).catch(() => {});
+		return () => { dead = true; };
+	}, [doc, pageNumber]);
+	return size;
+}
+
 // Sayfa küçük resmi + üstüne yerleşen önizleme katmanı (yüzde konumlu çocuklar)
 export function PagePreview({ doc, page = 1, width = 260, children, label }) {
 	return (

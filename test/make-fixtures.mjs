@@ -1,7 +1,7 @@
 // Test PDF'leri üretir: test/out/ altına yazar (git'e girmez). Kullanım: node test/make-fixtures.mjs
 import { mkdir, writeFile } from 'node:fs/promises';
 import { deflateSync } from 'node:zlib';
-import { PDFDocument, StandardFonts, rgb } from '@cantoo/pdf-lib';
+import { PDFDocument, StandardFonts, degrees, rgb } from '@cantoo/pdf-lib';
 
 const out = new URL('./out/', import.meta.url);
 await mkdir(out, { recursive: true });
@@ -62,6 +62,14 @@ for (let i = 0; i < 3; i += 1) {
 	page.drawImage(png, { x: 0, y: 0, width: 595, height: 842 });
 }
 await save('taranmis-gibi.pdf', await scan.save());
+
+// Döndürülmüş sayfalar (/Rotate 90, 180, 270) ve kırpma kutusu kaymış sayfa: yazı yerleştiren araçlar görünen yöne göre çalışmalı
+const turned = await labelled('R', 4);
+turned.getPage(0).setCropBox(30, 40, 535, 762);
+turned.getPage(1).setRotation(degrees(90));
+turned.getPage(2).setRotation(degrees(180));
+turned.getPage(3).setRotation(degrees(270));
+await save('donuk.pdf', await turned.save());
 
 // PDF olmayan dosyalar
 await save('not-pdf.txt', 'bu bir PDF degil\n');
