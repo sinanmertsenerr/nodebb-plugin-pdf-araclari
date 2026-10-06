@@ -1,22 +1,21 @@
-// PDF Araçları: forumun renk ve yazı değişkenlerini kullanır; vurgu mor. Düz yüzey, tek ana düğme, kısa metin.
-// Açık zeminde mor #6d28d9 (beyazda 7.1:1), koyu zeminde #c4b5fd.
+// PDF Araçları: forumun renk ve yazı değişkenlerini kullanır. Vurgu forumun kendi mavisi (--yu-solid), CV Oluşturucu gibi;
+// mor yalnız forum menüsündeki kartta. İnce çizgiler, gölgesiz yüzeyler, tek ana düğme, kısa metin.
 
 .pdf-yu-page {
-    --pdfu-line: var(--bs-border-color, rgba(16, 32, 42, .14));
-    --pdfu-hover: rgba(16, 32, 42, .05);
+    --pdfu-line: rgba(16, 32, 42, .12);
+    --pdfu-hover: rgba(16, 32, 42, .045);
     --pdfu-ink: var(--bs-body-color);
     --pdfu-ink2: var(--yside-ink, #46545d);
     --pdfu-muted: var(--yside-ico, #5f6d75);
     --pdfu-card: var(--bs-body-bg);
     --pdfu-field: #fff;
-    --pdfu-accent: #6d28d9;
-    --pdfu-accent-rgb: 109, 40, 217;
-    --pdfu-accent-hover: #5b21b6;
+    --pdfu-accent: var(--yu-solid, #1a73e8);
+    --pdfu-accent-rgb: 26, 115, 232;
+    --pdfu-accent-hover: #1765cc;
     --pdfu-on-accent: #fff;
-    --pdfu-accent-text: #6d28d9;
+    --pdfu-accent-text: #1765cc;
     --pdfu-danger: #a4262c;
     --pdfu-success: #166534;
-    --pdfu-raise: transparent;
     position: relative;
     margin: 0 -8px;
     overflow-x: clip;
@@ -28,14 +27,13 @@
     --pdfu-ink2: var(--yside-ink, #c9d0d5);
     --pdfu-muted: var(--yside-ico, #9aa6ad);
     --pdfu-field: #2a2b2e;
-    --pdfu-accent: #a78bfa;
-    --pdfu-accent-rgb: 167, 139, 250;
-    --pdfu-accent-hover: #c4b5fd;
-    --pdfu-on-accent: #1e1033;
-    --pdfu-accent-text: #c4b5fd;
+    --pdfu-accent: #8ab4f8;
+    --pdfu-accent-rgb: 138, 180, 248;
+    --pdfu-accent-hover: #aecbfa;
+    --pdfu-on-accent: #0b1b33;
+    --pdfu-accent-text: #8ab4f8;
     --pdfu-danger: #f28b82;
     --pdfu-success: #86efac;
-    --pdfu-raise: rgba(255, 255, 255, .03);
 }
 
 .pdf-visually-hidden {
@@ -55,29 +53,13 @@
     overflow: visible;
 }
 
-// İki tonlu ikon: arkadaki yumuşak dolgu. Geçerli araçta vurgu rengiyle biraz koyulaşır.
-.pdf-i-tone {
-    fill: currentColor;
-    fill-opacity: .16;
-    stroke: none;
-}
-
-// ---------- Renk tonları: her araç grubunun kendi rengi (ikon kutuları, bırakma alanı); düğmeler ve adımlar mor ----------
-.pdf-tone--basic { --pdfu-tone: #6d28d9; --pdfu-tone-rgb: 109, 40, 217; }
-.pdf-tone--convert { --pdfu-tone: #1d4ed8; --pdfu-tone-rgb: 37, 99, 235; }
-.pdf-tone--edit { --pdfu-tone: #be185d; --pdfu-tone-rgb: 219, 39, 119; }
-.pdf-tone--secure { --pdfu-tone: #047857; --pdfu-tone-rgb: 5, 150, 105; }
-.pdf-tone--student { --pdfu-tone: #b45309; --pdfu-tone-rgb: 217, 119, 6; }
-.pdf-tone--scan { --pdfu-tone: #0f766e; --pdfu-tone-rgb: 13, 148, 136; }
-
-[data-theme="dark"] {
-    .pdf-tone--basic { --pdfu-tone: #c4b5fd; --pdfu-tone-rgb: 167, 139, 250; }
-    .pdf-tone--convert { --pdfu-tone: #93c5fd; --pdfu-tone-rgb: 96, 165, 250; }
-    .pdf-tone--edit { --pdfu-tone: #f9a8d4; --pdfu-tone-rgb: 244, 114, 182; }
-    .pdf-tone--secure { --pdfu-tone: #6ee7b7; --pdfu-tone-rgb: 52, 211, 153; }
-    .pdf-tone--student { --pdfu-tone: #fcd34d; --pdfu-tone-rgb: 251, 191, 36; }
-    .pdf-tone--scan { --pdfu-tone: #5eead4; --pdfu-tone-rgb: 45, 212, 191; }
-}
+// ---------- Grup renkleri: forumun kategori kutuları gibi koyu, düz tonlar (beyaz ikon üstünde 4.5:1 üstü) ----------
+.pdf-tone--basic { --pdfu-tone: #1d4ed8; --pdfu-tone-rgb: 29, 78, 216; }
+.pdf-tone--convert { --pdfu-tone: #0f766e; --pdfu-tone-rgb: 15, 118, 110; }
+.pdf-tone--edit { --pdfu-tone: #be123c; --pdfu-tone-rgb: 190, 18, 60; }
+.pdf-tone--secure { --pdfu-tone: #15803d; --pdfu-tone-rgb: 21, 128, 61; }
+.pdf-tone--student { --pdfu-tone: #c2410c; --pdfu-tone-rgb: 194, 65, 12; }
+.pdf-tone--scan { --pdfu-tone: #7e22ce; --pdfu-tone-rgb: 126, 34, 206; }
 
 // ---------- Kabuk ----------
 .pdf-app {
@@ -104,30 +86,40 @@
     to { opacity: 1; transform: none; }
 }
 
-// İkon kutusu: grubun renginde, yumuşak degrade
+// İkon kutusu (A: nötr kare, B: grubun düz rengi + beyaz ikon, C: kutusuz)
 .pdf-ico-tile {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    width: 46px;
-    height: 46px;
-    border-radius: 12px;
-    background: linear-gradient(145deg, rgba(var(--pdfu-tone-rgb), .17), rgba(var(--pdfu-tone-rgb), .07));
-    box-shadow: inset 0 0 0 1px rgba(var(--pdfu-tone-rgb), .14);
-    color: var(--pdfu-tone);
-    transition: transform .22s cubic-bezier(.2, 0, 0, 1);
-
-    .pdf-i-tone {
-        fill-opacity: .24;
-    }
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: var(--pdfu-hover);
+    color: var(--pdfu-ink2);
+    transition: color .15s ease, background-color .15s ease;
 }
 
 .pdf-ico-tile--lg {
-    width: 58px;
-    height: 58px;
-    border-radius: 16px;
-    box-shadow: inset 0 0 0 1px rgba(var(--pdfu-tone-rgb), .16), 0 10px 22px -14px rgba(var(--pdfu-tone-rgb), .8);
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+}
+
+.pdf-look-b .pdf-ico-tile {
+    background-color: var(--pdfu-tone);
+    color: #fff;
+}
+
+.pdf-look-c .pdf-ico-tile {
+    width: 24px;
+    height: 24px;
+    background: none;
+}
+
+.pdf-look-c .pdf-ico-tile--lg {
+    width: 32px;
+    height: 32px;
 }
 
 // ---------- Ana ekran: araç kartları ----------
@@ -176,20 +168,19 @@
 
 .pdf-search-input {
     width: 100%;
-    height: 44px;
-    padding: 0 14px 0 42px;
+    height: 40px;
+    padding: 0 14px 0 40px;
     border: 1px solid var(--pdfu-line);
-    border-radius: 12px;
+    border-radius: 8px;
     background-color: var(--pdfu-field);
     color: var(--pdfu-ink);
     font: inherit;
     font-size: 15px;
-    box-shadow: 0 1px 2px rgba(16, 32, 42, .04);
     transition: border-color .15s ease, box-shadow .15s ease;
 
     &:focus {
         border-color: rgba(var(--pdfu-accent-rgb), .6);
-        box-shadow: 0 0 0 4px rgba(var(--pdfu-accent-rgb), .14);
+        box-shadow: 0 0 0 3px rgba(var(--pdfu-accent-rgb), .15);
     }
 }
 
@@ -212,7 +203,7 @@
 .pdf-cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 12px;
+    gap: 10px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -221,37 +212,33 @@
 .pdf-card {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     width: 100%;
     height: 100%;
-    min-height: 78px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     border: 1px solid var(--pdfu-line);
-    border-radius: 14px;
-    background: linear-gradient(var(--pdfu-raise), var(--pdfu-raise)), var(--pdfu-card);
-    box-shadow: 0 1px 2px rgba(16, 32, 42, .04);
+    border-radius: 10px;
+    background-color: var(--pdfu-card);
     color: var(--pdfu-ink);
     font: inherit;
     text-align: left;
     cursor: pointer;
-    transition: transform .2s cubic-bezier(.2, 0, 0, 1), box-shadow .2s ease, border-color .2s ease;
+    transition: border-color .15s ease, background-color .15s ease;
 
     &:hover:not(:disabled) {
-        border-color: rgba(var(--pdfu-tone-rgb), .45);
-        box-shadow: 0 14px 30px -18px rgba(var(--pdfu-tone-rgb), .6);
-        transform: translateY(-2px);
+        border-color: rgba(var(--pdfu-accent-rgb), .5);
+        background-color: rgba(var(--pdfu-accent-rgb), .04);
 
         .pdf-ico-tile {
-            transform: scale(1.07) rotate(-4deg);
+            color: var(--pdfu-accent-text);
         }
     }
 
     &:active:not(:disabled) {
-        transform: scale(.98);
+        background-color: rgba(var(--pdfu-accent-rgb), .08);
     }
 
     &:disabled {
-        box-shadow: none;
         cursor: default;
         opacity: .55;
     }
@@ -259,7 +246,7 @@
 
 .pdf-card-text {
     display: grid;
-    gap: 2px;
+    gap: 1px;
     min-width: 0;
 }
 
@@ -277,6 +264,84 @@
     color: var(--pdfu-muted);
     font-size: 13px;
     line-height: 1.35;
+}
+
+// B: forumun kategori listesi gibi satırlar (renkli kare, büyük ad, aralarında çizgi)
+.pdf-look-b {
+    .pdf-cards {
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 0 32px;
+    }
+
+    .pdf-card {
+        gap: 14px;
+        padding: 14px 4px;
+        border: 0;
+        border-bottom: 1px solid var(--pdfu-line);
+        border-radius: 0;
+        background: none;
+
+        &:hover:not(:disabled) {
+            background: none;
+
+            .pdf-ico-tile {
+                color: #fff;
+            }
+
+            .pdf-card-name {
+                color: var(--pdfu-accent-text);
+            }
+        }
+    }
+
+    .pdf-card-name {
+        font-size: 17px;
+    }
+
+    .pdf-card-desc {
+        font-size: 14px;
+    }
+}
+
+// C: forumun sol menüsü gibi kısa liste (ikon + ad, açıklamasız)
+.pdf-look-c {
+    .pdf-cards {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 2px 16px;
+    }
+
+    .pdf-card {
+        gap: 10px;
+        min-height: 40px;
+        padding: 6px 10px;
+        border: 0;
+        border-radius: 8px;
+        background: none;
+
+        &:hover:not(:disabled) {
+            background-color: var(--pdfu-hover);
+        }
+    }
+
+    .pdf-card-name {
+        font-size: 14.5px;
+        font-weight: 500;
+    }
+
+    .pdf-card-desc {
+        display: none;
+    }
+
+    .pdf-home-h {
+        margin-bottom: 6px;
+        color: var(--pdfu-muted);
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .pdf-home-group + .pdf-home-group {
+        margin-top: 20px;
+    }
 }
 
 .pdf-home-none {
@@ -434,13 +499,7 @@
         border-color: var(--pdfu-accent);
         background-color: var(--pdfu-accent);
         color: var(--pdfu-on-accent);
-        animation: pdf-pop .32s cubic-bezier(.3, 0, 0, 1.4);
     }
-}
-
-@keyframes pdf-pop {
-    from { transform: scale(.6); }
-    to { transform: none; }
 }
 
 // Aracın kendisi: yumuşak köşeli kart, alt çubuk kartın tabanında
@@ -451,9 +510,8 @@
     min-height: 420px;
     padding: 24px 28px 0;
     border: 1px solid var(--pdfu-line);
-    border-radius: 20px;
-    background: linear-gradient(var(--pdfu-raise), var(--pdfu-raise)), var(--pdfu-card);
-    box-shadow: 0 1px 2px rgba(16, 32, 42, .04), 0 20px 44px -30px rgba(16, 32, 42, .3);
+    border-radius: 12px;
+    background-color: var(--pdfu-card);
 }
 
 // Seçili araç kartın tamamını kaplar: kök öğe uzar, alt çubuk en alta oturur
@@ -483,7 +541,7 @@
     min-height: 40px;
     padding: 0 16px;
     border: 1px solid transparent;
-    border-radius: 10px;
+    border-radius: 8px;
     font: inherit;
     font-size: 14px;
     font-weight: 600;
@@ -492,7 +550,7 @@
     transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .12s ease;
 
     &:active:not(:disabled) {
-        transform: scale(.97);
+        transform: translateY(1px);
     }
 
     &:disabled {
@@ -503,23 +561,16 @@
 
 .pdfb--primary {
     background-color: var(--pdfu-accent);
-    box-shadow: 0 1px 2px rgba(var(--pdfu-accent-rgb), .25), 0 8px 18px -10px rgba(var(--pdfu-accent-rgb), .75);
     color: var(--pdfu-on-accent);
 
     &:hover:not(:disabled) {
         background-color: var(--pdfu-accent-hover);
-        box-shadow: 0 1px 2px rgba(var(--pdfu-accent-rgb), .3), 0 10px 22px -10px rgba(var(--pdfu-accent-rgb), .85);
-    }
-
-    &:disabled {
-        box-shadow: none;
     }
 }
 
 .pdfb--lg {
-    min-height: 48px;
-    padding: 0 28px;
-    border-radius: 12px;
+    min-height: 44px;
+    padding: 0 24px;
     font-size: 15px;
 }
 
@@ -635,29 +686,27 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 14px;
-    min-height: 340px;
+    gap: 12px;
+    min-height: 320px;
     margin-bottom: 28px;
-    padding: 48px 24px 36px;
-    border: 2px dashed rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .3);
-    border-radius: 18px;
-    background: radial-gradient(120% 90% at 50% 0%, rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .09), transparent 62%);
+    padding: 44px 24px 36px;
+    border: 2px dashed var(--pdfu-line);
+    border-radius: 12px;
     color: var(--pdfu-muted);
     text-align: center;
-    transition: border-color .2s ease, background-color .2s ease, transform .2s cubic-bezier(.2, 0, 0, 1);
+    transition: border-color .15s ease, background-color .15s ease;
 
     &:hover {
-        border-color: rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .5);
+        border-color: rgba(var(--pdfu-accent-rgb), .45);
     }
 
     &.is-over {
         border-style: solid;
-        border-color: var(--pdfu-tone, var(--pdfu-accent));
-        background-color: rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .07);
-        transform: scale(1.005);
+        border-color: var(--pdfu-accent);
+        background-color: rgba(var(--pdfu-accent-rgb), .05);
 
         .pdf-drop-ico {
-            transform: translateY(-4px) scale(1.06);
+            color: var(--pdfu-accent-text);
         }
     }
 }
@@ -666,17 +715,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 72px;
-    height: 72px;
-    border-radius: 22px;
-    background: linear-gradient(145deg, rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .2), rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .08));
-    box-shadow: inset 0 0 0 1px rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .16), 0 12px 26px -16px rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .8);
-    color: var(--pdfu-tone, var(--pdfu-accent));
-    transition: transform .25s cubic-bezier(.2, 0, 0, 1);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: var(--pdfu-hover);
+    color: var(--pdfu-ink2);
+    transition: color .15s ease;
+}
 
-    .pdf-i-tone {
-        fill-opacity: .26;
-    }
+.pdf-look-b .pdf-drop-ico {
+    background-color: rgba(var(--pdfu-tone-rgb), .1);
+    color: var(--pdfu-tone);
 }
 
 .pdf-drop-title {
@@ -694,9 +743,9 @@
     gap: 12px;
     min-height: 0;
     margin: 12px 0 0;
-    padding: 14px 16px;
+    padding: 12px 16px;
     border-width: 1px;
-    border-radius: 14px;
+    border-radius: 10px;
     background: none;
 
     .pdf-drop-title {
@@ -730,15 +779,13 @@
     gap: 12px;
     padding: 10px 12px;
     border: 1px solid var(--pdfu-line);
-    border-radius: 14px;
-    background: linear-gradient(var(--pdfu-raise), var(--pdfu-raise)), var(--pdfu-card);
-    box-shadow: 0 1px 2px rgba(16, 32, 42, .04);
-    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
-    animation: pdf-row-in .24s cubic-bezier(.2, 0, 0, 1);
+    border-radius: 10px;
+    background-color: var(--pdfu-card);
+    transition: border-color .15s ease, background-color .15s ease;
+    animation: pdf-row-in .2s cubic-bezier(.2, 0, 0, 1);
 
     &:hover {
-        border-color: rgba(var(--pdfu-tone-rgb, var(--pdfu-accent-rgb)), .35);
-        box-shadow: 0 8px 20px -14px rgba(16, 32, 42, .35);
+        border-color: rgba(var(--pdfu-accent-rgb), .35);
     }
 
     &.is-target {
@@ -838,9 +885,8 @@
     flex-shrink: 0;
     overflow: hidden;
     border: 1px solid var(--pdfu-line);
-    border-radius: 6px;
+    border-radius: 4px;
     background-color: #fff;
-    box-shadow: 0 1px 3px rgba(16, 32, 42, .1);
     box-sizing: content-box;
 
     canvas {
@@ -1057,10 +1103,10 @@
 // ---------- Resim listesi, metin kutusu ----------
 .pdf-file-img {
     flex-shrink: 0;
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border: 1px solid var(--pdfu-line);
-    border-radius: 10px;
+    border-radius: 6px;
     background-color: #fff;
     object-fit: cover;
 }
@@ -1270,8 +1316,8 @@
     margin: 16px -28px 0;
     padding: 14px 28px;
     border-top: 1px solid var(--pdfu-line);
-    border-radius: 0 0 20px 20px;
-    background: linear-gradient(var(--pdfu-raise), var(--pdfu-raise)), var(--pdfu-card);
+    border-radius: 0 0 12px 12px;
+    background-color: var(--pdfu-card);
 }
 
 .pdf-actions-info {

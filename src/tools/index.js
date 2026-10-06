@@ -23,13 +23,13 @@ export const TOOLS = [
 	{ id: 'pdf2img', group: 'convert', icon: 'file-image', component: PdfToImg },
 	{ id: 'pdf2txt', group: 'convert', icon: 'file-text', component: PdfToTxt },
 	{ id: 'imgconv', group: 'convert', icon: 'swap', component: ImgConv },
-	{ id: 'imgshrink', group: 'convert', icon: 'shrink', component: ImgShrink },
+	{ id: 'imgshrink', group: 'convert', icon: 'image-minus', component: ImgShrink },
 	{ id: 'txt2pdf', group: 'convert', icon: 'type' },
 
 	{ id: 'edit', group: 'edit', icon: 'edit' },
 	{ id: 'sign', group: 'edit', icon: 'signature' },
 	{ id: 'pagenum', group: 'edit', icon: 'hash' },
-	{ id: 'watermark', group: 'edit', icon: 'droplet' },
+	{ id: 'watermark', group: 'edit', icon: 'stamp' },
 
 	{ id: 'protect', group: 'secure', icon: 'lock', component: Protect },
 	{ id: 'unlock', group: 'secure', icon: 'unlock', component: Unlock },

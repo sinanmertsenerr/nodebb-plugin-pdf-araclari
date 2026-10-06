@@ -95,6 +95,8 @@ function App({ ctx }) {
 	const [dir, setDir] = useState('');
 	const root = useRef(null);
 	const tool = TOOLS.find(x => x.id === id);
+	// Görünüm seçeneği (a/b/c): karşılaştırma için; kullanıcı seçince tek görünüm kalacak
+	const look = (hashParts().find(p => /^look=[abc]$/.test(p)) || `look=${ctx.look || 'a'}`).slice(5);
 
 	useEffect(() => {
 		const onHash = () => { setDir(''); setId(toolFromHash()); };
@@ -114,7 +116,7 @@ function App({ ctx }) {
 	};
 
 	return (
-		<div class="pdf-app" ref={root}>
+		<div class={`pdf-app pdf-look-${look}`} ref={root}>
 			<div key={tool ? tool.id : 'home'} class={`pdf-view${dir ? ` pdf-enter-${dir}` : ''}`}>
 				{tool ? <ToolPage t={t} tool={tool} onBack={() => go('')} /> : <Home t={t} onPick={go} />}
 			</div>

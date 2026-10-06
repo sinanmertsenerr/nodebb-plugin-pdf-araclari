@@ -22,6 +22,18 @@ createServer(async (req, res) => {
 			res.writeHead(204).end();
 			return;
 		}
+		// Forum kopyası (test/forum-shell.mjs) için: forumun stil, yazı tipi ve resimleri buradan geçer.
+		// Forum başka kökene dosya vermiyor (Cross-Origin-Resource-Policy: same-origin); bu yol aynı kökenden verir. Yalnızca okur.
+		if (req.method === 'GET' && url.pathname.startsWith('/__forum/')) {
+			const upstream = await fetch(`https://yu.uniforum.app/${url.pathname.slice('/__forum/'.length)}${url.search}`);
+			const type = upstream.headers.get('content-type') || 'application/octet-stream';
+			let body = Buffer.from(await upstream.arrayBuffer());
+			if (/text\/css/.test(type)) {
+				body = Buffer.from(body.toString('utf8').replace(/url\((['"]?)\//g, 'url($1/__forum/').replace(/https:\/\/yu\.uniforum\.app\//g, '/__forum/'));
+			}
+			res.writeHead(upstream.status, { 'Content-Type': type, 'Cache-Control': 'max-age=3600' }).end(body);
+			return;
+		}
 		const file = path.resolve(root, `.${decodeURIComponent(url.pathname)}`);
 		if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }
 		const body = await readFile(file);
