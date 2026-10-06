@@ -32,19 +32,8 @@ const mount = `
 	content.querySelectorAll('[data-widget-area]').forEach(function (el) { el.remove(); });
 	content.innerHTML = '<div class="row flex-fill"><div class="pdf-yu-page w-100" id="pdf-yu-root"></div></div>';
 	var host = document.getElementById('pdf-yu-root');
-	var looks = [['a', 'A · Sade kart'], ['b', 'B · Kategori satırı'], ['c', 'C · Kısa liste']];
-	var bar = document.createElement('div');
-	bar.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:3000;display:flex;gap:6px;padding:6px;border:1px solid rgba(16,32,42,.15);border-radius:10px;background:#fff;box-shadow:0 8px 24px -8px rgba(16,32,42,.35);font:600 14px Inter,system-ui,sans-serif';
-	function show(look) {
-		params.set('look', look);
-		history.replaceState(null, '', '#' + params.toString());
-		window.YuPDF.unmount();
-		window.YuPDF.mount(host, { uid: 1, relativePath: '', csrf: '', uiLang: 'tr', look: look });
-		bar.querySelectorAll('button').forEach(function (b) { var on = b.dataset.look === look; b.style.background = on ? '#1a73e8' : 'transparent'; b.style.color = on ? '#fff' : '#1f272b'; });
-	}
-	looks.forEach(function (l) { var b = document.createElement('button'); b.type = 'button'; b.dataset.look = l[0]; b.textContent = l[1]; b.style.cssText = 'border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font:inherit'; b.onclick = function () { show(l[0]); }; bar.appendChild(b); });
-	document.body.appendChild(bar);
-	show(params.get('look') || 'a');
+	window.YuPDF.mount(host, { uid: 1, relativePath: '', csrf: '', uiLang: 'tr' });
+
 }());
 </script>`;
 html = html.replace(/<\/body>/i, `${mount}\n</body>`);

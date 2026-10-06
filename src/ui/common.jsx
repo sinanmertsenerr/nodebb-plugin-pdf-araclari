@@ -30,11 +30,12 @@ export function Dropzone({ t, many, onFiles, compact, kind = 'pdf', capture }) {
 			onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOver(false); }}
 			onDrop={(e) => { e.preventDefault(); setOver(false); take(e.dataTransfer && e.dataTransfer.files); }}
 		>
-			{!compact && <span class="pdf-drop-ico" aria-hidden="true"><Icon name={kind === 'image' ? 'image-plus' : 'upload'} size={30} /></span>}
+			{!compact && <span class="pdf-drop-ico" aria-hidden="true"><Icon name={kind === 'image' ? 'image-plus' : 'upload'} size={28} /></span>}
 			{compact && !over ? null : <p class="pdf-drop-title">{over ? t('drop.over') : t(many ? k.many : k.one)}</p>}
 			<button type="button" class={compact ? 'pdfb pdfb--secondary' : 'pdfb pdfb--primary pdfb--lg'} onClick={() => input.current && input.current.click()}>
-				{compact ? <Icon name="plus" size={18} /> : null}{compact ? t(k.add) : t(k.pick)}
+				<Icon name={compact ? 'plus' : 'upload'} size={18} />{compact ? t(k.add) : t(k.pick)}
 			</button>
+			{compact ? null : <p class="pdf-drop-hint">{t('drop.hint')}</p>}
 			<input ref={input} class="pdf-visually-hidden" type="file" accept={k.accept} capture={capture} multiple={many} tabIndex={-1} aria-label={t(k.pick)}
 				onChange={(e) => { take(e.currentTarget.files); e.currentTarget.value = ''; }} />
 			{!compact && <p class="pdf-privacy"><Icon name="lock" size={16} />{t('drop.privacy')}</p>}
@@ -227,13 +228,24 @@ export function Radios({ name, legend, value, options, onChange, cards }) {
 	return (
 		<fieldset class={cards ? 'pdf-levels' : 'pdf-radios'}>
 			<legend class="pdf-label">{legend}</legend>
-			{options.map(o => (
-				<label key={o.value} class={cards ? `pdf-level${value === o.value ? ' is-on' : ''}` : 'pdf-radio'}>
-					<input type="radio" name={name} checked={value === o.value} onChange={() => onChange(o.value)} />
-					<span class={cards ? 'pdf-level-name' : undefined}>{o.label}</span>
-					{cards && o.hint ? <span class="pdf-level-hint">{o.hint}</span> : null}
-				</label>
-			))}
+			{cards
+				? options.map(o => (
+					<label key={o.value} class={`pdf-level${value === o.value ? ' is-on' : ''}`}>
+						<input type="radio" name={name} checked={value === o.value} onChange={() => onChange(o.value)} />
+						<span class="pdf-level-name">{o.label}</span>
+						{o.hint ? <span class="pdf-level-hint">{o.hint}</span> : null}
+					</label>
+				))
+				: (
+					<div class="pdf-seg">
+						{options.map(o => (
+							<label key={o.value} class="pdf-radio">
+								<input type="radio" name={name} checked={value === o.value} onChange={() => onChange(o.value)} />
+								<span>{o.label}</span>
+							</label>
+						))}
+					</div>
+				)}
 		</fieldset>
 	);
 }
@@ -251,7 +263,10 @@ export function Check({ checked, onChange, label, disabled }) {
 export function Slider({ id, label, min, max, step = 1, value, onChange, format }) {
 	return (
 		<div class="pdf-field">
-			<label class="pdf-label" for={id}>{label}: <strong>{format ? format(value) : value}</strong></label>
+			<div class="pdf-slider-head">
+				<label class="pdf-label" for={id}>{label}</label>
+				<output class="pdf-slider-val" for={id}>{format ? format(value) : value}</output>
+			</div>
 			<input id={id} class="pdf-range" type="range" min={min} max={max} step={step} value={value} onInput={e => onChange(Number(e.currentTarget.value))} />
 		</div>
 	);
