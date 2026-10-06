@@ -2,7 +2,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { download, isEncryptedBytes, loadClean } from '../pdf.js';
 import { baseName, fmtSize, safeName } from '../util.js';
-import { ErrorLine, ResultBand, useSinglePdf } from '../ui/common.jsx';
+import { usePageSize, useSinglePdf } from '../ui/common.jsx';
+import { PagePaper, Workspace, fitPage } from '../ui/workspace.jsx';
 import { Icon } from '../ui/icons.jsx';
 import { SingleGate } from './gate.jsx';
 
@@ -31,22 +32,19 @@ function UnlockTool({ t, opened, file, onAgain }) {
 		}
 	};
 
+	const frame = usePageSize(opened.doc, 1);
 	return (
-		<div>
-			<p class="pdf-fileinfo"><strong>{file.name}</strong> · {t('pages', opened.pages)} · {fmtSize(file.size)}</p>
+		<Workspace
+			t={t} file={file.name} meta={`${t('pages', opened.pages)} · ${fmtSize(file.size)}`} onChangeFile={onAgain}
+			canvas={box => <PagePaper doc={opened.doc} page={1} width={fitPage(box, frame)} />}
+			action={encrypted === false ? null : { label: t('un.go'), onClick: run, busy: busy || encrypted === null, icon: 'unlock' }}
+			result={result && { title: t('un.done'), meta: fmtSize(result.bytes.length), onDownload: () => download(result.bytes, `${safeName(baseName(file.name))}-sifresiz.pdf`, 'application/pdf'), onAgain }}
+			error={error}
+		>
 			{encrypted === false
 				? <p class="pdf-info" role="status"><Icon name="circle-check" size={18} />{t('un.none')}</p>
 				: <p class="pdf-info" role="status"><Icon name={opened.password ? 'unlock' : 'lock'} size={18} />{opened.password ? t('un.opened') : t('un.ownerOnly')}</p>}
-			<ErrorLine>{error}</ErrorLine>
-			{result
-				? <ResultBand t={t} title={t('un.done')} meta={fmtSize(result.bytes.length)} onDownload={() => download(result.bytes, `${safeName(baseName(file.name))}-sifresiz.pdf`, 'application/pdf')} onAgain={onAgain} />
-				: (
-					<div class="pdf-actions">
-						<span class="pdf-actions-info" />
-						<button type="button" class="pdfb pdfb--primary" disabled={busy || encrypted !== true} onClick={run}>{busy ? t('busy') : t('un.go')}</button>
-					</div>
-				)}
-		</div>
+		</Workspace>
 	);
 }
 

@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { closePdf, isPdf, openPdf, loadForEdit, getLib, download } from '../pdf.js';
 import { fmtSize } from '../util.js';
-import { Dropzone, ErrorLine, PasswordPrompt, ResultBand, Thumb, moveItem, openError, uid, useDragReorder } from '../ui/common.jsx';
+import { Dropzone, ErrorLine, PasswordPrompt, Thumb, moveItem, openError, uid, useDragReorder } from '../ui/common.jsx';
+import { Workspace } from '../ui/workspace.jsx';
 import { Icon } from '../ui/icons.jsx';
 
 export function Merge({ t }) {
@@ -67,6 +68,8 @@ export function Merge({ t }) {
 	const canGo = ready.length >= 2 && ready.length === items.length && !busy;
 
 	const run = async () => {
+		if (ready.length < 2) { setError(t('merge.need')); return; }
+		if (ready.length !== items.length) { setError(t('merge.locked')); return; }
 		setBusy(true);
 		setError('');
 		try {
@@ -94,8 +97,8 @@ export function Merge({ t }) {
 			</div>
 		);
 	}
-	return (
-		<div>
+	const list = (
+		<div class="pdf-canvas-list">
 			<ol class="pdf-files">
 				{items.map((it, i) => (
 					<li key={it.id} class={`pdf-file${drag.over === i ? ' is-target' : ''}`} {...drag.bind(i)} draggable={it.locked ? undefined : true}>
@@ -117,15 +120,18 @@ export function Merge({ t }) {
 				))}
 			</ol>
 			<Dropzone t={t} many compact onFiles={add} />
-			<ErrorLine>{error}</ErrorLine>
-			{result
-				? <ResultBand t={t} meta={`${t('pages', result.pages)} · ${fmtSize(result.bytes.length)}`} onDownload={() => download(result.bytes, 'birlestirilmis.pdf', 'application/pdf')} onAgain={() => { items.forEach(it => closePdf(it.opened)); setItems([]); setResult(null); }} />
-				: (
-					<div class="pdf-actions">
-						<p class="pdf-actions-info">{ready.length < 2 ? t('merge.need') : t('merge.total', ready.length, pages)}</p>
-						<button type="button" class="pdfb pdfb--primary" disabled={!canGo} onClick={run}>{busy ? t('busy') : t('merge.go')}</button>
-					</div>
-				)}
 		</div>
+	);
+	return (
+		<Workspace
+			t={t}
+			canvas={list}
+			action={{ label: t('merge.go'), onClick: run, busy }}
+			result={result && { meta: `${t('pages', result.pages)} · ${fmtSize(result.bytes.length)}`, onDownload: () => download(result.bytes, 'birlestirilmis.pdf', 'application/pdf'), onEdit: () => setResult(null), onAgain: () => { items.forEach(it => closePdf(it.opened)); setItems([]); setResult(null); } }}
+			error={error}
+		>
+			<p class="pdf-summary"><strong>{t('merge.total', items.length, pages)}</strong></p>
+			<p class="pdf-hint">{ready.length < 2 ? t('merge.need') : t('merge.hint')}</p>
+		</Workspace>
 	);
 }

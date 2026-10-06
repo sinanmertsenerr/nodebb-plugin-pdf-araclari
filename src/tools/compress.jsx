@@ -2,7 +2,8 @@
 import { useState } from 'preact/hooks';
 import { download, getLib, loadClean } from '../pdf.js';
 import { baseName, fmtSize, safeName } from '../util.js';
-import { ErrorLine, ResultBand, useSinglePdf } from '../ui/common.jsx';
+import { Radios, usePageSize, useSinglePdf } from '../ui/common.jsx';
+import { PagePaper, Workspace, fitPage } from '../ui/workspace.jsx';
 import { SingleGate } from './gate.jsx';
 
 const LEVELS = {
@@ -48,6 +49,7 @@ function CompressTool({ t, opened, file, onAgain }) {
 	const [busy, setBusy] = useState('');
 	const [error, setError] = useState('');
 	const [result, setResult] = useState(null);
+	const frame = usePageSize(opened.doc, 1);
 	const before = file.size;
 
 	const run = async () => {
@@ -70,35 +72,24 @@ function CompressTool({ t, opened, file, onAgain }) {
 		}
 	};
 
-	const pick = (key) => { setLevel(key); setResult(null); };
 	const saved = result ? Math.round((1 - result.after / before) * 100) : 0;
-
 	return (
-		<div>
-			<p class="pdf-fileinfo"><strong>{file.name}</strong> · {t('pages', opened.pages)} · {fmtSize(before)}</p>
-			<fieldset class="pdf-levels">
-				<legend class="pdf-label">{t('cmp.level')}</legend>
-				{Object.entries(LEVELS).map(([key, lv]) => (
-					<label key={key} class={`pdf-level${level === key ? ' is-on' : ''}`}>
-						<input type="radio" name="pdf-cmp-level" checked={level === key} onChange={() => pick(key)} />
-						<span class="pdf-level-name">{t(lv.name)}</span>
-						<span class="pdf-level-hint">{t(lv.hint)}</span>
-					</label>
-				))}
-			</fieldset>
-			<ErrorLine>{error}</ErrorLine>
-			{result
-				? (
-					<ResultBand t={t} title={result.smaller ? t('cmp.saved', saved) : t('cmp.same')} meta={`${t('cmp.before')} ${fmtSize(before)} → ${t('cmp.after')} ${fmtSize(result.after)}`}
-						onDownload={() => download(result.bytes, result.smaller ? `${safeName(baseName(file.name))}-kucuk.pdf` : safeName(file.name), 'application/pdf')} onAgain={onAgain} />
-				)
-				: (
-					<div class="pdf-actions">
-						<p class="pdf-actions-info" role="status">{busy || ''}</p>
-						<button type="button" class="pdfb pdfb--primary" disabled={!!busy} onClick={run}>{busy ? t('busy') : t('cmp.go')}</button>
-					</div>
-				)}
-		</div>
+		<Workspace
+			t={t} file={file.name} meta={`${t('pages', opened.pages)} · ${fmtSize(before)}`} onChangeFile={onAgain}
+			canvas={box => <PagePaper doc={opened.doc} page={1} width={fitPage(box, frame)} caption={t('pages', opened.pages)} />}
+			action={{ label: t('cmp.go'), onClick: run, busy }}
+			result={result && {
+				title: result.smaller ? t('cmp.saved', saved) : t('cmp.same'),
+				meta: `${fmtSize(before)} → ${fmtSize(result.after)}`,
+				onDownload: () => download(result.bytes, result.smaller ? `${safeName(baseName(file.name))}-kucuk.pdf` : safeName(file.name), 'application/pdf'),
+				onEdit: () => setResult(null),
+				onAgain,
+			}}
+			error={error}
+		>
+			<Radios name="pdf-cmp-level" legend={t('cmp.level')} value={level} onChange={(v) => { setLevel(v); setResult(null); }} cards
+				options={Object.entries(LEVELS).map(([key, lv]) => ({ value: key, label: t(lv.name), hint: t(lv.hint) }))} />
+		</Workspace>
 	);
 }
 

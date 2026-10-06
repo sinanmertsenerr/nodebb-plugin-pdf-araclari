@@ -5,7 +5,8 @@ import { download, getLib, loadClean } from '../pdf.js';
 import { loadFontSet } from '../fonts.js';
 import { numberSpot, pageFrame } from '../stamp.js';
 import { baseName, fmtSize, safeName } from '../util.js';
-import { Check, ErrorLine, Field, PagePreview, Radios, ResultBand, Slider, usePageSize, useSinglePdf } from '../ui/common.jsx';
+import { Check, Field, Radios, Slider, usePageSize, useSinglePdf } from '../ui/common.jsx';
+import { PagePaper, Workspace, fitPage } from '../ui/workspace.jsx';
 import { SingleGate } from './gate.jsx';
 
 const MARGIN = 28; // pt, ≈1 cm
@@ -55,7 +56,8 @@ function PageNumTool({ t, opened, file, onAgain }) {
 	const edit = fn => (v) => { fn(v); setResult(null); };
 
 	const run = async () => {
-		if (startBad || count < 1) return;
+		if (startBad) return;
+		if (count < 1) { setError(t('pn.none')); return; }
 		setBusy(true);
 		setError('');
 		try {
@@ -81,47 +83,39 @@ function PageNumTool({ t, opened, file, onAgain }) {
 		}
 	};
 
-	// Önizleme: numara, görünen sayfa ölçüsüne göre yüzde konumla yerleşir
-	const k = frame ? 280 / frame.w : 0;
+	// Önizleme: numara, görünen sayfa ölçüsüne göre ölçekli ve köşeye göre konumlu
 	const sample = numberLabel(format, startBad ? 1 : start, startBad ? count : last, t);
-	const mark = frame ? (
-		<span class={`pdf-pn-mark pdf-pn-mark--${pos}`} style={{ fontSize: `${size * k}px`, '--pdf-m': `${MARGIN * k}px` }}>{sample}</span>
-	) : null;
+	const paper = (box) => {
+		const width = fitPage(box, frame);
+		const k = frame ? width / frame.w : 0;
+		return (
+			<PagePaper doc={opened.doc} page={previewPage} width={width} caption={t('pn.previewOf', previewPage)}>
+				{frame ? <span class={`pdf-pn-mark pdf-pn-mark--${pos}`} style={{ fontSize: `${size * k}px`, '--pdf-m': `${MARGIN * k}px` }}>{sample}</span> : null}
+			</PagePaper>
+		);
+	};
 
 	return (
-		<div>
-			<p class="pdf-fileinfo"><strong>{file.name}</strong> · {t('pages', opened.pages)} · {fmtSize(file.size)}</p>
-			<div class="pdf-with-preview">
-				<div class="pdf-with-preview-form">
-					<PosPicker t={t} value={pos} onChange={edit(setPos)} />
-					<div class="pdf-opts pdf-opts--spaced">
-						<Radios name="pdf-pn-format" legend={t('pn.format')} value={format} onChange={edit(setFormat)} options={[
-							{ value: 'n', label: '1' },
-							{ value: 'nt', label: `1 / ${count}` },
-							{ value: 'pn', label: t('pn.word', 1) },
-							{ value: 'pnt', label: t('pn.wordOf', 1, count) },
-						]} />
-					</div>
-					<div class="pdf-opts">
-						<Field id="pdf-pn-start" label={t('pn.start')} error={startBad ? t('pn.startBad') : ''}>
-							<input id="pdf-pn-start" class="pdf-input pdf-input--short" inputMode="numeric" value={startText} aria-invalid={startBad ? 'true' : undefined} aria-describedby={startBad ? 'pdf-pn-start-e' : undefined} onInput={e => edit(setStartText)(e.currentTarget.value)} />
-						</Field>
-						<Slider id="pdf-pn-size" label={t('pn.size')} min={8} max={24} value={size} onChange={edit(setSize)} format={v => `${v} pt`} />
-					</div>
-					<Check checked={skipFirst} disabled={opened.pages < 2} onChange={edit(setSkipFirst)} label={t('pn.skip')} />
-				</div>
-				<PagePreview doc={opened.doc} page={previewPage} width={280} label={t('preview')}>{mark}</PagePreview>
-			</div>
-			<ErrorLine>{error}</ErrorLine>
-			{result
-				? <ResultBand t={t} title={t('pn.done')} meta={`${t('pages', opened.pages)} · ${fmtSize(result.bytes.length)}`} onDownload={() => download(result.bytes, `${safeName(baseName(file.name))}-numarali.pdf`, 'application/pdf')} onAgain={onAgain} />
-				: (
-					<div class="pdf-actions">
-						<p class="pdf-actions-info" role="status">{count < 1 ? t('pn.none') : t('pn.count', count)}</p>
-						<button type="button" class="pdfb pdfb--primary" disabled={busy || startBad || count < 1} onClick={run}>{busy ? t('busy') : t('pn.go')}</button>
-					</div>
-				)}
-		</div>
+		<Workspace
+			t={t} file={file.name} meta={`${t('pages', opened.pages)} · ${fmtSize(file.size)}`} onChangeFile={onAgain}
+			canvas={paper}
+			action={{ label: t('pn.go'), onClick: run, busy, info: count < 1 ? t('pn.none') : t('pn.count', count) }}
+			result={result && { title: t('pn.done'), meta: `${t('pages', opened.pages)} · ${fmtSize(result.bytes.length)}`, onDownload: () => download(result.bytes, `${safeName(baseName(file.name))}-numarali.pdf`, 'application/pdf'), onEdit: () => setResult(null), onAgain }}
+			error={error}
+		>
+			<PosPicker t={t} value={pos} onChange={edit(setPos)} />
+			<Radios name="pdf-pn-format" legend={t('pn.format')} value={format} onChange={edit(setFormat)} options={[
+				{ value: 'n', label: '1' },
+				{ value: 'nt', label: `1 / ${count}` },
+				{ value: 'pn', label: t('pn.word', 1) },
+				{ value: 'pnt', label: t('pn.wordOf', 1, count) },
+			]} />
+			<Slider id="pdf-pn-size" label={t('pn.size')} min={8} max={24} value={size} onChange={edit(setSize)} format={v => `${v} pt`} />
+			<Field id="pdf-pn-start" label={t('pn.start')} error={startBad ? t('pn.startBad') : ''}>
+				<input id="pdf-pn-start" class="pdf-input pdf-input--short" inputMode="numeric" value={startText} aria-invalid={startBad ? 'true' : undefined} aria-describedby={startBad ? 'pdf-pn-start-e' : undefined} onInput={e => edit(setStartText)(e.currentTarget.value)} />
+			</Field>
+			<Check checked={skipFirst} disabled={opened.pages < 2} onChange={edit(setSkipFirst)} label={t('pn.skip')} />
+		</Workspace>
 	);
 }
 

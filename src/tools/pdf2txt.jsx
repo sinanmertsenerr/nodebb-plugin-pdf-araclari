@@ -1,18 +1,22 @@
 // PDF'ten metin: sayfaların yazısını çıkarır; kopyala ya da TXT olarak indir. Taranmış sayfada yazı yoktur, söylenir.
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { download } from '../pdf.js';
-import { baseName, safeName } from '../util.js';
+import { baseName, fmtSize, safeName } from '../util.js';
 import { textOfPages, wordCount } from '../text.js';
 import { notify } from '../notify.js';
-import { Check, ErrorLine, useSinglePdf } from '../ui/common.jsx';
+import { Check, useSinglePdf } from '../ui/common.jsx';
 import { Icon } from '../ui/icons.jsx';
+import { useStepMark } from '../ui/steps.jsx';
+import { Workspace } from '../ui/workspace.jsx';
 import { SingleGate } from './gate.jsx';
 
 function PdfToTxtTool({ t, opened, file, onAgain }) {
 	const [pages, setPages] = useState(null);
 	const [progress, setProgress] = useState(0);
 	const [breaks, setBreaks] = useState(false);
+	const [saved, setSaved] = useState(false);
 	const [error, setError] = useState('');
+	useStepMark('done', saved);
 
 	useEffect(() => {
 		let dead = false;
@@ -37,31 +41,34 @@ function PdfToTxtTool({ t, opened, file, onAgain }) {
 			setError(t('p2t.copyFail'));
 		}
 	};
-	const save = () => download(new TextEncoder().encode(`﻿${text}`), `${safeName(baseName(file.name))}.txt`, 'text/plain;charset=utf-8');
+	const save = () => {
+		if (!text) return;
+		download(new TextEncoder().encode(`﻿${text}`), `${safeName(baseName(file.name))}.txt`, 'text/plain;charset=utf-8');
+		setSaved(true);
+	};
 
-	if (!pages && !error) {
-		return <p class="pdf-status" role="status">{t('p2t.reading', progress, opened.pages)}</p>;
-	}
-	return (
-		<div>
-			<p class="pdf-fileinfo"><strong>{file.name}</strong>{pages ? ` · ${t('p2t.stats', pages.length, wordCount(text))}` : ''}</p>
-			<ErrorLine>{error}</ErrorLine>
-			{empty
-				? <p class="pdf-info" role="status"><Icon name="alert" size={18} />{t('p2t.empty')}</p>
-				: (
-					<div class="pdf-field pdf-field--wide pdf-grow">
-						<label class="pdf-label" for="pdf-p2t-text">{t('p2t.label')}</label>
-						<textarea id="pdf-p2t-text" class="pdf-textarea pdf-textarea--grow" readOnly value={text} spellcheck={false} />
-					</div>
-				)}
-			<div class="pdf-actions">
-				<Check checked={breaks} onChange={setBreaks} label={t('p2t.breaks')} />
-				<span class="pdf-actions-info" />
-				<button type="button" class="pdfb pdfb--secondary" onClick={onAgain}>{t('res.again')}</button>
-				<button type="button" class="pdfb pdfb--secondary" disabled={!text} onClick={copy}><Icon name="copy" size={18} />{t('p2t.copy')}</button>
-				<button type="button" class="pdfb pdfb--primary" disabled={!text} onClick={save}><Icon name="download" size={18} />{t('p2t.save')}</button>
+	let canvas;
+	if (!pages && !error) canvas = <p class="pdf-status pdf-status--canvas" role="status"><span class="pdf-yu-spinner" aria-hidden="true" />{t('p2t.reading', progress, opened.pages)}</p>;
+	else if (empty) canvas = <p class="pdf-info pdf-info--canvas" role="status"><Icon name="alert" size={18} />{t('p2t.empty')}</p>;
+	else {
+		canvas = (
+			<div class="pdf-textpaper">
+				<label class="pdf-visually-hidden" for="pdf-p2t-text">{t('p2t.label')}</label>
+				<textarea id="pdf-p2t-text" class="pdf-textpaper-area" readOnly value={text} spellcheck={false} />
 			</div>
-		</div>
+		);
+	}
+
+	return (
+		<Workspace
+			t={t} file={file.name} meta={pages ? t('p2t.stats', pages.length, wordCount(text)) : `${t('pages', opened.pages)} · ${fmtSize(file.size)}`} onChangeFile={onAgain}
+			canvas={canvas}
+			action={text ? { label: t('p2t.save'), onClick: save, icon: 'download' } : null}
+			error={error}
+		>
+			<Check checked={breaks} onChange={setBreaks} label={t('p2t.breaks')} disabled={!text} />
+			<button type="button" class="pdfb pdfb--secondary pdfb--block" disabled={!text} onClick={copy}><Icon name="copy" size={18} />{t('p2t.copy')}</button>
+		</Workspace>
 	);
 }
 

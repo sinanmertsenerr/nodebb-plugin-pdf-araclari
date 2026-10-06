@@ -4,25 +4,27 @@ import { download, renderToCanvas } from '../pdf.js';
 import { FORMATS, canvasBytes } from '../images.js';
 import { baseName, fmtSize, safeName } from '../util.js';
 import { zip } from '../zip.js';
-import { ErrorLine, Radios, ResultBand, useSinglePdf } from '../ui/common.jsx';
-import { PageSelector } from '../ui/PageSelector.jsx';
+import { Radios, useSinglePdf } from '../ui/common.jsx';
+import { PageGrid, RangeControls, usePagePick } from '../ui/PageSelector.jsx';
+import { Workspace } from '../ui/workspace.jsx';
 import { SingleGate } from './gate.jsx';
 
 const SIZES = { s1: 100, s2: 150, s3: 220 };
 
 function PdfToImgTool({ t, opened, file, onAgain }) {
 	const total = opened.pages;
-	const [picked, setPicked] = useState(() => new Set(Array.from({ length: total }, (_, i) => i + 1)));
-	const [invalid, setInvalid] = useState(false);
 	const [format, setFormat] = useState('png');
 	const [size, setSize] = useState('s2');
 	const [busy, setBusy] = useState('');
 	const [error, setError] = useState('');
 	const [result, setResult] = useState(null);
-	const chosen = [...picked].sort((a, b) => a - b);
+	const pick = usePagePick(total, new Set(Array.from({ length: total }, (_, i) => i + 1)), () => setResult(null));
+	const { chosen } = pick;
 	const edit = fn => (v) => { fn(v); setResult(null); };
 
 	const run = async () => {
+		if (pick.bad) return;
+		if (!chosen.length) { setError(t('split.need')); return; }
 		setError('');
 		try {
 			const fmt = FORMATS[format];
@@ -50,20 +52,21 @@ function PdfToImgTool({ t, opened, file, onAgain }) {
 	};
 
 	return (
-		<div>
-			<PageSelector t={t} doc={opened.doc} total={total} picked={picked} onChange={(set) => { setPicked(set); setResult(null); }} onInvalid={setInvalid} id="pdf-p2i-range" />
-			<ErrorLine>{error}</ErrorLine>
-			{result
-				? <ResultBand t={t} meta={result.meta} onDownload={() => download(result.bytes, result.name, result.type)} onAgain={onAgain} />
-				: (
-					<div class="pdf-actions">
-						<Radios name="pdf-p2i-format" legend={t('p2i.format')} value={format} onChange={edit(setFormat)} options={[{ value: 'png', label: 'PNG' }, { value: 'jpg', label: 'JPG' }]} />
-						<Radios name="pdf-p2i-size" legend={t('p2i.size')} value={size} onChange={edit(setSize)} options={[{ value: 's1', label: `${t('p2i.s1')} · ${SIZES.s1} dpi` }, { value: 's2', label: `${t('p2i.s2')} · ${SIZES.s2} dpi` }, { value: 's3', label: `${t('p2i.s3')} · ${SIZES.s3} dpi` }]} />
-						<span class="pdf-actions-info" role="status">{busy}</span>
-						<button type="button" class="pdfb pdfb--primary" disabled={!chosen.length || !!busy || invalid} onClick={run}>{busy ? t('busy') : t('p2i.go')}</button>
-					</div>
-				)}
-		</div>
+		<Workspace
+			t={t} file={file.name} meta={`${t('pages', total)} · ${fmtSize(file.size)}`} onChangeFile={onAgain}
+			canvas={<PageGrid t={t} doc={opened.doc} pick={pick} />}
+			action={{ label: t('p2i.go'), onClick: run, busy }}
+			result={result && { meta: result.meta, onDownload: () => download(result.bytes, result.name, result.type), onEdit: () => setResult(null), onAgain }}
+			error={error}
+		>
+			<RangeControls t={t} pick={pick} id="pdf-p2i-range" />
+			<Radios name="pdf-p2i-format" legend={t('p2i.format')} value={format} onChange={edit(setFormat)} options={[{ value: 'png', label: 'PNG' }, { value: 'jpg', label: 'JPG' }]} />
+			<Radios name="pdf-p2i-size" legend={t('p2i.size')} value={size} onChange={edit(setSize)} cards options={[
+				{ value: 's1', label: t('p2i.s1'), hint: `${SIZES.s1} dpi` },
+				{ value: 's2', label: t('p2i.s2'), hint: `${SIZES.s2} dpi` },
+				{ value: 's3', label: t('p2i.s3'), hint: `${SIZES.s3} dpi` },
+			]} />
+		</Workspace>
 	);
 }
 

@@ -4,7 +4,8 @@ import { download } from '../pdf.js';
 import { FORMATS, canvasBytes, drawToCanvas, loadImage } from '../images.js';
 import { baseName, fmtSize, safeName, uniqueNames } from '../util.js';
 import { zip } from '../zip.js';
-import { Dropzone, ErrorLine, Radios, ResultBand, Slider } from '../ui/common.jsx';
+import { Dropzone, ErrorLine, Radios, Slider } from '../ui/common.jsx';
+import { Workspace } from '../ui/workspace.jsx';
 import { ImageRows, useImageList } from '../ui/ImageRows.jsx';
 
 const EDGES = { e1: 800, e2: 1280, e3: 1600, e4: 2400 };
@@ -76,27 +77,25 @@ export function ImgShrink({ t }) {
 	}
 	const edit = fn => (v) => { fn(v); setResult(null); };
 	return (
-		<div>
-			<ImageRows t={t} items={items} setItems={list.setItems} onChange={() => setResult(null)} />
-			<Dropzone t={t} many compact kind="image" onFiles={(f) => { setResult(null); list.add(f); }} />
-			<div class="pdf-opts pdf-opts--spaced">
-				<Radios name="pdf-is-edge" legend={t('is.edge')} value={edge} onChange={edit(setEdge)} options={[
-					{ value: 'e1', label: `${t('is.e1')} · ${EDGES.e1} px` },
-					{ value: 'e2', label: `${t('is.e2')} · ${EDGES.e2} px` },
-					{ value: 'e3', label: `${t('is.e3')} · ${EDGES.e3} px` },
-					{ value: 'e4', label: `${t('is.e4')} · ${EDGES.e4} px` },
-				]} />
-				<Slider id="pdf-is-q" label={t('ic.quality')} min={40} max={95} step={5} value={quality} onChange={edit(setQuality)} format={v => `%${v}`} />
-			</div>
-			<ErrorLine>{[...list.errors, error]}</ErrorLine>
-			{result
-				? <ResultBand t={t} title={result.title} meta={result.meta} onDownload={() => download(result.bytes, result.name, result.type)} onAgain={() => { list.clear(); setResult(null); }} />
-				: (
-					<div class="pdf-actions">
-						<p class="pdf-actions-info" role="status">{busy || t('i2p.count', items.length)}</p>
-						<button type="button" class="pdfb pdfb--primary" disabled={!!busy} onClick={run}>{busy ? t('busy') : t('is.go')}</button>
-					</div>
-				)}
-		</div>
+		<Workspace
+			t={t}
+			canvas={(
+				<div class="pdf-canvas-list">
+					<ImageRows t={t} items={items} setItems={list.setItems} onChange={() => setResult(null)} />
+					<Dropzone t={t} many compact kind="image" onFiles={(f) => { setResult(null); list.add(f); }} />
+				</div>
+			)}
+			action={{ label: t('is.go'), onClick: run, busy, info: t('i2p.count', items.length) }}
+			result={result && { title: result.title, meta: result.meta, onDownload: () => download(result.bytes, result.name, result.type), onEdit: () => setResult(null), onAgain: () => { list.clear(); setResult(null); } }}
+			error={[...list.errors, error]}
+		>
+			<Radios name="pdf-is-edge" legend={t('is.edge')} value={edge} onChange={edit(setEdge)} cards options={[
+				{ value: 'e1', label: t('is.e1'), hint: `${EDGES.e1} px` },
+				{ value: 'e2', label: t('is.e2'), hint: `${EDGES.e2} px` },
+				{ value: 'e3', label: t('is.e3'), hint: `${EDGES.e3} px` },
+				{ value: 'e4', label: t('is.e4'), hint: `${EDGES.e4} px` },
+			]} />
+			<Slider id="pdf-is-q" label={t('ic.quality')} min={40} max={95} step={5} value={quality} onChange={edit(setQuality)} format={v => t('pct', v)} />
+		</Workspace>
 	);
 }

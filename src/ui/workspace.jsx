@@ -1,12 +1,12 @@
 // Araç çalışma alanı: solda belge (gri zemin üstünde büyük önizleme), sağda ayar paneli, ana düğme panelin tabanında.
 // Yaygın PDF araçlarındaki düzen: kişi neyi değiştirdiğini önizlemede görür, düğmeyi her araçta aynı yerde bulur.
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { notify } from '../notify.js';
 import { Icon } from './icons.jsx';
 import { useStepMark } from './steps.jsx';
-import { ErrorLine } from './common.jsx';
+import { ErrorLine, Thumb } from './common.jsx';
 
-// Kutunun iç genişliği (önizlemeyi alana sığdırmak için)
+// Kutunun iç genişliği (ana ekranın sütun sayısı için)
 export function useWidth(ref, fallback = 560) {
 	const [width, setWidth] = useState(fallback);
 	useEffect(() => {
@@ -18,14 +18,55 @@ export function useWidth(ref, fallback = 560) {
 	return width;
 }
 
-// canvas: öğe ya da (genişlik) => öğe. action: { label, onClick, busy, info }. result: { title, meta, onDownload, onEdit, onAgain }
+const PAD = 56; // önizleme alanının iç boşluğu (iki yan)
+
+// Önizleme alanının kullanılabilir ölçüsü. Telefonda alan içeriğe göre uzadığı için yükseklik ekrandan alınır.
+function useCanvasBox(ref) {
+	const [box, setBox] = useState({ w: 560, h: 640 });
+	useEffect(() => {
+		const el = ref.current;
+		if (!el || typeof ResizeObserver === 'undefined') return undefined;
+		const measure = () => {
+			const wide = window.matchMedia('(min-width: 992px)').matches;
+			setBox({ w: Math.max(200, el.clientWidth - (wide ? PAD : 32)), h: Math.max(240, (wide ? el.clientHeight : window.innerHeight * 0.55) - (wide ? PAD : 32)) });
+		};
+		measure();
+		const ro = new ResizeObserver(measure);
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
+	return box;
+}
+
+// Sayfayı alana sığdıran genişlik: hem eni hem boyu sığar. frame: görünen sayfa ölçüsü (pt) ya da henüz yoksa null
+export function fitPage(box, frame, max = 720) {
+	if (!frame) return Math.min(box.w, 460);
+	const byHeight = box.h / (frame.h / frame.w);
+	return Math.max(200, Math.round(Math.min(box.w, max, byHeight)));
+}
+
+// canvas: öğe ya da (box) => öğe. action: { label, onClick, busy, info }. result: { title, meta, onDownload, onEdit, onAgain }
 export function Workspace({ t, file, meta, onChangeFile, canvas, children, action, result, error }) {
+	const root = useRef(null);
 	const area = useRef(null);
-	const width = useWidth(area);
+	const box = useCanvasBox(area);
+
+	// Alan ekranın kalanını doldurur: kutunun sayfadaki üst kenarı ölçülür (CSS --pdf-ws-top)
+	useLayoutEffect(() => {
+		const set = () => {
+			if (!root.current) return;
+			const top = root.current.getBoundingClientRect().top + window.scrollY;
+			root.current.style.setProperty('--pdf-ws-top', `${Math.max(0, Math.round(top))}px`);
+		};
+		set();
+		window.addEventListener('resize', set);
+		return () => window.removeEventListener('resize', set);
+	}, []);
+
 	return (
-		<div class="pdf-ws">
-			<div class="pdf-ws-canvas">
-				<div class="pdf-ws-canvas-in" ref={area}>{typeof canvas === 'function' ? canvas(width) : canvas}</div>
+		<div class="pdf-ws" ref={root}>
+			<div class="pdf-ws-canvas" ref={area}>
+				<div class="pdf-ws-canvas-in">{typeof canvas === 'function' ? canvas(box) : canvas}</div>
 			</div>
 			<aside class="pdf-ws-panel" aria-label={t('ws.panel')}>
 				{file ? (
@@ -41,26 +82,26 @@ export function Workspace({ t, file, meta, onChangeFile, canvas, children, actio
 				<div class="pdf-ws-body">{children}</div>
 				<div class="pdf-ws-foot">
 					<ErrorLine>{error}</ErrorLine>
-					{result ? <ResultBlock t={t} {...result} /> : <ActionBlock t={t} {...action} />}
+					{result ? <ResultBlock t={t} {...result} /> : (action ? <ActionBlock t={t} {...action} /> : null)}
 				</div>
 			</aside>
 		</div>
 	);
 }
 
-function ActionBlock({ t, label, onClick, busy, info }) {
+function ActionBlock({ t, label, onClick, busy, info, icon }) {
 	return (
 		<>
 			{info ? <p class="pdf-ws-info" role="status">{info}</p> : null}
 			<button type="button" class="pdfb pdfb--primary pdfb--block" disabled={!!busy} aria-busy={busy ? 'true' : undefined} onClick={onClick}>
-				{busy ? <span class="pdf-yu-spinner pdf-yu-spinner--sm" aria-hidden="true" /> : null}
+				{busy ? <span class="pdf-yu-spinner pdf-yu-spinner--sm" aria-hidden="true" /> : (icon ? <Icon name={icon} size={18} /> : null)}
 				{busy ? (typeof busy === 'string' ? busy : t('busy')) : label}
 			</button>
 		</>
 	);
 }
 
-// İş bitince: başarı başlığı, İndir (ana düğme), ayarları değiştirmeye dönme ve yeni dosya
+// İş bitince: başarı başlığı, İndir (ana düğme), ayarlara dönme ve yeni dosya
 function ResultBlock({ t, title, meta, onDownload, onEdit, onAgain }) {
 	const ref = useRef(null);
 	const heading = title || t('res.ready');
@@ -82,9 +123,15 @@ function ResultBlock({ t, title, meta, onDownload, onEdit, onAgain }) {
 	);
 }
 
-// Önizlemedeki kâğıt: sayfa küçük resmi + üstüne yerleşen katman. width: görünen genişlik (px)
-export function fitWidth(areaWidth, pageRatio, maxHeight) {
-	const byWidth = Math.min(areaWidth, 720);
-	if (!pageRatio || !maxHeight) return Math.max(200, Math.round(byWidth));
-	return Math.max(200, Math.round(Math.min(byWidth, maxHeight / pageRatio)));
+// Gri zemin üstünde duran sayfa; üstüne yüzde konumlu önizleme katmanı (numara, filigran) yerleşir
+export function PagePaper({ doc, page = 1, width, children, caption }) {
+	return (
+		<figure class="pdf-paper-wrap">
+			<div class="pdf-paper">
+				<Thumb doc={doc} page={page} width={width} rotate={0} />
+				{children ? <div class="pdf-preview-layer" aria-hidden="true">{children}</div> : null}
+			</div>
+			{caption ? <figcaption class="pdf-paper-cap">{caption}</figcaption> : null}
+		</figure>
+	);
 }

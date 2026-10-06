@@ -3,7 +3,8 @@ import { useState } from 'preact/hooks';
 import { download, getLib } from '../pdf.js';
 import { canvasBytes, drawToCanvas, loadImage } from '../images.js';
 import { fmtSize } from '../util.js';
-import { Dropzone, ErrorLine, Radios, ResultBand } from '../ui/common.jsx';
+import { Dropzone, ErrorLine, Radios } from '../ui/common.jsx';
+import { Workspace } from '../ui/workspace.jsx';
 import { ImageRows, useImageList } from '../ui/ImageRows.jsx';
 
 const A4 = { w: 595.28, h: 841.89 };
@@ -75,22 +76,21 @@ export function ImgToPdf({ t }) {
 	}
 	const edit = fn => (v) => { fn(v); setResult(null); };
 	return (
-		<div>
-			<ImageRows t={t} items={items} setItems={list.setItems} onChange={() => setResult(null)} />
-			<Dropzone t={t} many compact kind="image" onFiles={(f) => { setResult(null); list.add(f); }} />
-			<div class="pdf-opts pdf-opts--spaced">
-				<Radios name="pdf-i2p-size" legend={t('i2p.size')} value={size} onChange={edit(setSize)} options={[{ value: 'a4', label: t('i2p.a4') }, { value: 'fit', label: t('i2p.fit') }]} />
-				<Radios name="pdf-i2p-margin" legend={t('i2p.margin')} value={margin} onChange={edit(setMargin)} options={[{ value: 'm0', label: t('i2p.m0') }, { value: 'm1', label: t('i2p.m1') }, { value: 'm2', label: t('i2p.m2') }]} />
-			</div>
-			<ErrorLine>{[...list.errors, error]}</ErrorLine>
-			{result
-				? <ResultBand t={t} meta={`${t('pages', result.pages)} · ${fmtSize(result.bytes.length)}`} onDownload={() => download(result.bytes, 'resimler.pdf', 'application/pdf')} onAgain={() => { list.clear(); setResult(null); }} />
-				: (
-					<div class="pdf-actions">
-						<p class="pdf-actions-info" role="status">{busy || t('i2p.count', items.length)}</p>
-						<button type="button" class="pdfb pdfb--primary" disabled={!!busy} onClick={run}>{busy ? t('busy') : t('i2p.go')}</button>
-					</div>
-				)}
-		</div>
+		<Workspace
+			t={t}
+			canvas={(
+				<div class="pdf-canvas-list">
+					<ImageRows t={t} items={items} setItems={list.setItems} onChange={() => setResult(null)} />
+					<Dropzone t={t} many compact kind="image" onFiles={(f) => { setResult(null); list.add(f); }} />
+				</div>
+			)}
+			action={{ label: t('i2p.go'), onClick: run, busy, info: t('i2p.count', items.length) }}
+			result={result && { meta: `${t('pages', result.pages)} · ${fmtSize(result.bytes.length)}`, onDownload: () => download(result.bytes, 'resimler.pdf', 'application/pdf'), onEdit: () => setResult(null), onAgain: () => { list.clear(); setResult(null); } }}
+			error={[...list.errors, error]}
+		>
+			<Radios name="pdf-i2p-size" legend={t('i2p.size')} value={size} onChange={edit(setSize)} options={[{ value: 'a4', label: t('i2p.a4') }, { value: 'fit', label: t('i2p.fit') }]} />
+			<Radios name="pdf-i2p-margin" legend={t('i2p.margin')} value={margin} onChange={edit(setMargin)} options={[{ value: 'm0', label: t('i2p.m0') }, { value: 'm1', label: t('i2p.m1') }, { value: 'm2', label: t('i2p.m2') }]} />
+			<p class="pdf-hint">{t('i2p.hint')}</p>
+		</Workspace>
 	);
 }

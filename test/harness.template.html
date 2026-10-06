@@ -35,6 +35,25 @@
 			var params = new URLSearchParams(location.hash.replace(/^#/, '').replace(/^([a-z0-9]+)/i, 'tool=$1'));
 			if (params.get('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
 			window.YuPDF.mount(document.getElementById('pdf-yu-root'), { uid: 1, relativePath: '', csrf: '', uiLang: params.get('ui') || 'tr' });
+			// Denetim ve önizleme için: #araç&demo=a.pdf,b.pdf test/out/ altındaki dosyaları bırakma alanına bırakır
+			var demo = params.get('demo');
+			if (demo) {
+				var tries = 0;
+				var drop = function () {
+					var zone = document.querySelector('.pdf-drop');
+					if (!zone) { if (tries++ < 50) setTimeout(drop, 100); return; }
+					Promise.all(demo.split(',').map(function (name) {
+						return fetch('/test/out/' + encodeURIComponent(name)).then(function (r) { return r.blob(); }).then(function (b) {
+							return new File([b], name, { type: /\.pdf$/i.test(name) ? 'application/pdf' : (b.type || 'image/jpeg') });
+						});
+					})).then(function (files) {
+						var dt = new DataTransfer();
+						files.forEach(function (f) { dt.items.add(f); });
+						zone.dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+					});
+				};
+				drop();
+			}
 		}());
 	</script>
 </body>
