@@ -87,13 +87,30 @@ export async function isEncryptedBytes(bytes) {
 	return (await PDFDocument.load(bytes, { ignoreEncryption: true })).isEncrypted;
 }
 
-// Şifre kaydı kalmamış, düzenlenebilir pdf-lib belgesi. Şifreli dosyayı doğrudan kaydetmek çıktıda şifre kaydı bırakabilir;
-// bu yüzden şifreli kaynak önce nesne akışsız kaydedilip yeniden yüklenir (bu biçimde şifre kaydı yazılmaz).
+// Şifresi çözülmüş belgede kalan kalıntılar: şifre sözlüğü, kaynağın eski xref akışı (pdf-lib okuyamaz ve olduğu gibi geri yazar,
+// içinde /Encrypt vardır) ve nesne akışı kapları. Bunlar yazılırsa çıktı yeniden "şifreli" sanılır ve açılmaz.
+export function stripEncryption(doc, { PDFName, PDFInvalidObject }) {
+	const ctx = doc.context;
+	delete ctx.trailerInfo.Encrypt;
+	const name = (dict, key) => {
+		const v = dict && typeof dict.get === 'function' ? dict.get(PDFName.of(key)) : null;
+		return v ? v.toString() : '';
+	};
+	for (const [ref, obj] of ctx.enumerateIndirectObjects()) {
+		const dict = obj && (obj.dict || obj);
+		const type = name(dict, 'Type');
+		const cipher = name(dict, 'Filter') === '/Standard' && name(dict, 'O');
+		if (obj instanceof PDFInvalidObject || type === '/XRef' || type === '/ObjStm' || cipher) ctx.delete(ref);
+	}
+	return doc;
+}
+
+// Şifre kaydı kalmamış, düzenlenebilir pdf-lib belgesi (şifreli kaynakta kalıntılar temizlenir)
 export async function loadClean(opened) {
-	const { PDFDocument } = await getLib();
+	const lib = await getLib();
 	const doc = await loadForEdit(opened);
 	if (!(await isEncryptedBytes(opened.bytes))) return doc;
-	return PDFDocument.load(await doc.save({ useObjectStreams: false }));
+	return stripEncryption(doc, lib);
 }
 
 // Açılmış belgeyi kapatır (pdf.js'te belge değil yükleme görevi yok edilir)

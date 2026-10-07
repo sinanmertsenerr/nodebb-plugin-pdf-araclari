@@ -1,7 +1,8 @@
 <!-- Dosyalar sayfa okunurken hemen inmeye başlar (page.js aynı istek biçimiyle kullanır, iki kez inmez) -->
 <link rel="preload" href="{js}" as="script">
 <link rel="preload" href="{css}" as="style">
-<div class="pdf-yu-page" id="pdf-yu-root" data-js="{js}" data-css="{css}" data-uid="{uid}" data-default-lang="{defaultLang}">
+<!-- data-clarity-mask: forumdaki oturum kaydı aracı (Microsoft Clarity) bu alanın içeriğini göremez; belgeler kişiseldir -->
+<div class="pdf-yu-page" id="pdf-yu-root" data-clarity-mask="True" data-js="{js}" data-css="{css}" data-uid="{uid}" data-default-lang="{defaultLang}">
 	<noscript>
 		<div class="alert alert-warning m-3">{{tx("pdf-araclari:needs-js")}}</div>
 	</noscript>
