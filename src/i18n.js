@@ -262,6 +262,7 @@ export const UI = {
 		'wm.done': 'Filigran eklendi',
 
 		'txt.label': 'Metin',
+		'txt.previewHint': 'Sağdaki alana yazmaya başla, PDF burada oluşsun.',
 		'txt.ph': 'Metni buraya yaz ya da yapıştır.\n\n# Başlık\n- madde',
 		'txt.open': 'TXT ya da MD dosyası aç',
 		'txt.size': 'Yazı boyutu',
@@ -662,6 +663,7 @@ export const UI = {
 		'wm.done': 'Watermark added',
 
 		'txt.label': 'Text',
+		'txt.previewHint': 'Start typing on the right and the PDF builds here.',
 		'txt.ph': 'Type or paste your text here.\n\n# Heading\n- item',
 		'txt.open': 'Open a TXT or MD file',
 		'txt.size': 'Text size',

@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { download, getLib, loadClean } from '../pdf.js';
 import { loadFontSet } from '../fonts.js';
-import { hexToRgb, pageFrame, rectToPdf } from '../stamp.js';
+import { hexToRgb, pageFrame, rectFromPdf, rectToPdf } from '../stamp.js';
 import { readFields, writeFields } from '../forms.js';
 import { canvasBytes, drawToCanvas, isImageFile, loadImage } from '../images.js';
 import { baseName, fmtSize, safeName } from '../util.js';
@@ -104,9 +104,39 @@ async function bake(opened, list, fields, values) {
 	return doc.save({ useObjectStreams: true, updateFieldAppearances: false });
 }
 
+const fieldId = name => `pdf-ff-${name.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+
+// Form alanının değeri sayfada, alanın kendi kutusunda canlı görünür (kaydedince PDF'e aynı yere yazılır)
+function FieldMark({ f, value, box, k, onPick }) {
+	const { x, y, w, h } = box;
+	const pick = (e) => { e.stopPropagation(); e.preventDefault(); onPick(f.name); };
+	let mark = null;
+	if (f.kind === 'check' && value) {
+		mark = <path d={`M${x + w * 0.2} ${y + h * 0.55} L${x + w * 0.42} ${y + h * 0.78} L${x + w * 0.82} ${y + h * 0.25}`} fill="none" stroke="#111827" stroke-width={Math.max(1.2, h * 0.12)} stroke-linecap="round" stroke-linejoin="round" />;
+	} else if (f.kind === 'radio' && value && box.option === value) {
+		mark = <circle cx={x + w / 2} cy={y + h / 2} r={Math.min(w, h) * 0.28} fill="#111827" />;
+	} else if ((f.kind === 'text' || f.kind === 'select') && value) {
+		const lines = f.kind === 'text' && f.multiline ? String(value).split('\n') : [String(value).replace(/\n/g, ' ')];
+		const size = f.multiline ? Math.min(11, (h - 4) / (lines.length * 1.2)) : Math.max(6, Math.min(14, h * 0.62));
+		mark = (
+			<text x={x + 2} y={f.multiline ? y + size + 1 : y + h / 2 + size * 0.35} font-size={size} fill="#111827" class="pdf-ed-svgtext">
+				{lines.map((line, i) => <tspan key={i} x={x + 2} dy={i ? size * 1.2 : 0}>{line}</tspan>)}
+			</text>
+		);
+	}
+	return (
+		<g class="pdf-ed-field">
+			<rect x={x} y={y} width={w} height={h} class="pdf-ed-fieldbox" stroke-width={1 / k} onPointerDown={pick}>
+				<title>{f.label}</title>
+			</rect>
+			{mark ? <g class="pdf-ed-fieldval" aria-hidden="true">{mark}</g> : null}
+		</g>
+	);
+}
+
 // Paneldeki form alanı
 function FormField({ t, f, value, onChange }) {
-	const id = `pdf-ff-${f.name.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+	const id = fieldId(f.name);
 	if (f.kind === 'check') return <Check checked={!!value} onChange={onChange} label={f.label} />;
 	if (f.kind === 'radio' || f.kind === 'select') {
 		return (
@@ -163,7 +193,11 @@ export function Editor({ t, opened, file, onAgain, mode }) {
 		// Form alanları (varsa panelde doldurulur)
 		Promise.all([getLib(), loadClean(opened)]).then(([lib, doc]) => {
 			if (dead) return;
-			const list = readFields(doc, lib);
+			// Alan kutuları görünen sayfa koordinatına çevrilir (döndürülmüş sayfada da doğru yer)
+			const list = readFields(doc, lib).map(f => ({
+				...f,
+				boxes: f.widgets.map((wd, i) => ({ page: wd.page, ...rectFromPdf(pageFrame(doc.getPage(wd.page - 1)), wd.rect), option: f.kind === 'radio' ? f.options[i] : undefined })),
+			}));
 			setFields(list);
 			setValues(Object.fromEntries(list.map(f => [f.name, f.value])));
 		}).catch(() => {});
@@ -363,6 +397,13 @@ export function Editor({ t, opened, file, onAgain, mode }) {
 	};
 
 	const formChanges = fields.filter(f => values[f.name] !== f.value).length;
+	// Sayfadaki alana tıklayınca paneldeki girişi seçilir (onay kutusu tıklayınca işaretlenir)
+	const focusField = (name) => {
+		const f = fields.find(x => x.name === name);
+		if (f && f.kind === 'check') { setValues(o => ({ ...o, [name]: !o[name] })); changed(); return; }
+		const el = document.getElementById(fieldId(name));
+		if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.focus({ preventScroll: true }); }
+	};
 	const save = async () => {
 		if (editing) finishEdit();
 		const items = list.filter(a => a.type !== 'text' || a.text.trim());
@@ -397,6 +438,7 @@ export function Editor({ t, opened, file, onAgain, mode }) {
 								<Thumb doc={opened.doc} page={n} width={dw} rotate={0} />
 								<svg class="pdf-ed-layer" viewBox={`0 0 ${s.w} ${s.h}`} width={dw} height={dh} role="img" aria-label={t('ed.pageLayer', n)}
 									onPointerDown={down(n, k)} onPointerMove={move(k)} onPointerUp={up} onPointerCancel={up}>
+									{fields.map(f => f.boxes.filter(b => b.page === n).map((b, i) => <FieldMark key={`${f.name}-${i}`} f={f} value={values[f.name]} box={b} k={k} onPick={focusField} />))}
 									{items.map(a => <Ann key={a.id} a={a} hidden={a.id === editing} />)}
 									{draft && draft.page === n ? <Ann a={draft} /> : null}
 									{selBox ? (

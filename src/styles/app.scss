@@ -1597,6 +1597,17 @@
     gap: 8px;
 }
 
+.pdf-pages {
+    display: grid;
+    justify-items: center;
+    gap: 20px;
+}
+
+.pdf-txt-area {
+    min-height: 260px;
+    font-size: 14px;
+}
+
 .pdf-input--multi {
     min-height: 84px;
     padding: 8px 12px;
@@ -1870,6 +1881,29 @@
     &.is-current {
         border-color: var(--pdfu-accent);
     }
+}
+
+// Form alanları sayfada: hafif mavi kutu (tıklanabilir), değer canlı yazılır
+.pdf-ed-fieldbox {
+    fill: rgba(26, 115, 232, .07);
+    stroke: rgba(26, 115, 232, .45);
+    cursor: pointer;
+    transition: fill .15s ease;
+
+    &:hover {
+        fill: rgba(26, 115, 232, .14);
+    }
+}
+
+.pdf-ed-tool--pen .pdf-ed-fieldbox,
+.pdf-ed-tool--hl .pdf-ed-fieldbox,
+.pdf-ed-tool--white .pdf-ed-fieldbox,
+.pdf-ed-tool--rect .pdf-ed-fieldbox {
+    pointer-events: none;
+}
+
+.pdf-ed-fieldval {
+    pointer-events: none;
 }
 
 .pdf-formfields {

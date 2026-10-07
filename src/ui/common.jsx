@@ -47,14 +47,29 @@ export function Dropzone({ t, many, onFiles, compact, kind = 'pdf', capture }) {
 export function Thumb({ doc, page, width, rotate }) {
 	const canvas = useRef(null);
 	const box = useRef(null);
+	const drawn = useRef(false);
 	const [ratio, setRatio] = useState(1.414);
 	const [state, setState] = useState('wait');
 	useEffect(() => {
 		let dead = false;
 		const draw = () => {
+			// Önceden çizilmişse (canlı önizleme) yeni çizim görünmez kanvasta yapılır, bitince kopyalanır: sayfa yanıp sönmez
+			if (drawn.current) {
+				const off = document.createElement('canvas');
+				renderPage(doc, page, off, width).then((size) => {
+					if (dead || !canvas.current) return;
+					canvas.current.width = off.width;
+					canvas.current.height = off.height;
+					canvas.current.getContext('2d').drawImage(off, 0, 0);
+					off.width = 1;
+					setRatio(size.height / size.width);
+				}).catch(() => {});
+				return;
+			}
 			setState('busy');
 			renderPage(doc, page, canvas.current, width).then((size) => {
 				if (dead) return;
+				drawn.current = true;
 				setRatio(size.height / size.width);
 				setState('ready');
 			}).catch(() => { if (!dead) setState('error'); });

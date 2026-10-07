@@ -9,6 +9,14 @@ function labelOf(field, PDFName) {
 }
 
 // -> [{ name, label, kind: 'text' | 'check' | 'radio' | 'select', value, options, multiline, maxLength }]
+// Alanın sayfadaki kutuları: [{ page (1'den), rect (pdf-lib koordinatı) }]. Sayfa, sayfaların Annots listesinden bulunur.
+function widgetsOf(field, doc, pageOf) {
+	return field.acroField.getWidgets().map((w) => {
+		const ref = doc.context.getObjectRef(w.dict);
+		return { page: ref ? pageOf.get(ref.toString()) : undefined, rect: w.getRectangle() };
+	}).filter(w => w.page);
+}
+
 export function readFields(doc, lib) {
 	let form;
 	try {
@@ -16,11 +24,17 @@ export function readFields(doc, lib) {
 	} catch (err) {
 		return [];
 	}
+	const pageOf = new Map();
+	doc.getPages().forEach((page, i) => {
+		const annots = page.node.Annots();
+		if (!annots) return;
+		for (let k = 0; k < annots.size(); k += 1) pageOf.set(annots.get(k).toString(), i + 1);
+	});
 	const out = [];
 	form.getFields().forEach((f) => {
 		try {
 			if (f.isReadOnly && f.isReadOnly()) return;
-			const base = { name: f.getName(), label: labelOf(f, lib.PDFName) };
+			const base = { name: f.getName(), label: labelOf(f, lib.PDFName), widgets: widgetsOf(f, doc, pageOf) };
 			if (f instanceof lib.PDFTextField) out.push({ ...base, kind: 'text', value: f.getText() || '', multiline: f.isMultiline(), maxLength: f.getMaxLength() || undefined });
 			else if (f instanceof lib.PDFCheckBox) out.push({ ...base, kind: 'check', value: f.isChecked() });
 			else if (f instanceof lib.PDFRadioGroup) out.push({ ...base, kind: 'radio', value: f.getSelected() || '', options: f.getOptions() });

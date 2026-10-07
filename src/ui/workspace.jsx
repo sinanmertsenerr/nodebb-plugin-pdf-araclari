@@ -137,9 +137,10 @@ export function PagePaper({ doc, page = 1, width, children, caption }) {
 	);
 }
 
-// Üretilen PDF'in ilk sayfası kâğıt olarak (canlı önizleme: Ödev kapağı, Çıktıya hazırla)
-export function BytesPaper({ bytes, width, page = 1, caption }) {
+// Üretilen PDF'i pdf.js ile açar; yeni sürüm hazır olunca eskisini kapatır (önizleme arada boşalmaz)
+function useLiveDoc(bytes) {
 	const [doc, setDoc] = useState(null);
+	const current = useRef(null);
 	useEffect(() => {
 		if (!bytes) return undefined;
 		let dead = false;
@@ -147,9 +148,35 @@ export function BytesPaper({ bytes, width, page = 1, caption }) {
 		getPdfjs().then(({ getDocument }) => {
 			task = getDocument({ data: bytes.slice(), isEvalSupported: false });
 			return task.promise;
-		}).then((d) => { if (!dead) setDoc(d); }).catch(() => {});
-		return () => { dead = true; if (task) { try { task.destroy(); } catch (e) { /* kapanmışsa önemli değil */ } } };
+		}).then((d) => {
+			if (dead) { try { task.destroy(); } catch (e) { /* önemli değil */ } return; }
+			const old = current.current;
+			current.current = task;
+			setDoc(d);
+			if (old) setTimeout(() => { try { old.destroy(); } catch (e) { /* önemli değil */ } }, 1500);
+		}).catch(() => {});
+		return () => { dead = true; };
 	}, [bytes]);
+	useEffect(() => () => { if (current.current) { try { current.current.destroy(); } catch (e) { /* önemli değil */ } } }, []);
+	return doc;
+}
+
+// Üretilen PDF'in ilk sayfası kâğıt olarak (canlı önizleme: Ödev kapağı, Çıktıya hazırla)
+export function BytesPaper({ bytes, width, page = 1, caption }) {
+	const doc = useLiveDoc(bytes);
 	if (!doc) return <div class="pdf-paper pdf-paper--empty" style={{ width: `${width}px`, height: `${Math.round(width * 1.414)}px` }} />;
 	return <PagePaper doc={doc} page={page} width={width} caption={caption} />;
+}
+
+// Üretilen PDF'in bütün sayfaları alt alta (canlı önizleme: Metinden PDF). Eski önizleme yenisi hazır olana kadar kalır.
+export function BytesPages({ bytes, width, t }) {
+	const doc = useLiveDoc(bytes);
+	if (!doc) return <div class="pdf-paper pdf-paper--empty" style={{ width: `${width}px`, height: `${Math.round(width * 1.414)}px` }} />;
+	return (
+		<div class="pdf-pages">
+			{Array.from({ length: doc.numPages }, (_, i) => i + 1).map(n => (
+				<PagePaper key={n} doc={doc} page={n} width={width} caption={t ? t('scan.page', n, doc.numPages) : null} />
+			))}
+		</div>
+	);
 }

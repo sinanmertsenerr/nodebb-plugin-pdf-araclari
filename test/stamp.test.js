@@ -4,9 +4,21 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-let CAP; let centeredStart; let hexToRgb; let numberSpot; let pageFrame; let rectToPdf; let watermarkSpots;
+let CAP; let centeredStart; let hexToRgb; let numberSpot; let pageFrame; let rectFromPdf; let rectToPdf; let watermarkSpots;
 test.before(async () => {
-	({ CAP, centeredStart, hexToRgb, numberSpot, pageFrame, rectToPdf, watermarkSpots } = await import('../src/stamp.js'));
+	({ CAP, centeredStart, hexToRgb, numberSpot, pageFrame, rectFromPdf, rectToPdf, watermarkSpots } = await import('../src/stamp.js'));
+});
+
+test('fromPdf, toPdf\'un tersidir (her dönüşte); rectFromPdf sol üstten kutu verir', () => {
+	for (const angle of [0, 90, 180, 270]) {
+		const f = pageFrame(fakePage(500, 700, angle, 15, 25));
+		const back = f.fromPdf(...Object.values(f.toPdf(40, 60)));
+		near(back.x, 40);
+		near(back.y, 60);
+	}
+	// Dönüşsüz A4: alttan 100 pt'deki 20 pt yüksek alan, üstten 842-120 = 722'de başlar
+	const box = rectFromPdf(pageFrame(fakePage(595, 842, 0)), { x: 50, y: 100, width: 200, height: 20 });
+	assert.deepEqual(box, { x: 50, y: 722, w: 200, h: 20 });
 });
 
 const fakePage = (w, h, angle, x = 0, y = 0) => ({ getCropBox: () => ({ x, y, width: w, height: h }), getRotation: () => ({ angle }) });

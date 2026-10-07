@@ -5,10 +5,10 @@ import { download, getLib } from '../pdf.js';
 import { loadFontSet } from '../fonts.js';
 import { layoutText, parseBlocks } from '../textlayout.js';
 import { fmtSize, safeName } from '../util.js';
-import { Check, Radios, ResultPreview } from '../ui/common.jsx';
+import { Check, Radios } from '../ui/common.jsx';
 import { Icon } from '../ui/icons.jsx';
 import { useStepMark } from '../ui/steps.jsx';
-import { Workspace } from '../ui/workspace.jsx';
+import { BytesPages, Workspace } from '../ui/workspace.jsx';
 
 const A4 = [595.28, 841.89];
 const MARGINS = { m1: 42, m2: 64, m3: 85 };
@@ -73,7 +73,7 @@ export function TxtToPdf({ t }) {
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState('');
 	const [result, setResult] = useState(null);
-	const [preview, setPreview] = useState(null);
+	const [livePdf, setLivePdf] = useState(null);
 	const picker = useRef(null);
 	const empty = !text.trim();
 	useStepMark('start', empty);
@@ -83,11 +83,11 @@ export function TxtToPdf({ t }) {
 
 	// Canlı önizleme: yazmaya ara verince ilk sayfa ve sayfa sayısı güncellenir
 	useEffect(() => {
-		if (empty || text.length > MAX_CHARS) { setPreview(null); return undefined; }
+		if (empty || text.length > MAX_CHARS) { setLivePdf(null); return undefined; }
 		let dead = false;
 		const id = setTimeout(() => {
-			buildTextPdf(text, opts, t).then((out) => { if (!dead) setPreview(out); }).catch(() => {});
-		}, 600);
+			buildTextPdf(text, opts, t).then((out) => { if (!dead) setLivePdf(out); }).catch(() => {});
+		}, 350);
 		return () => { dead = true; clearTimeout(id); };
 	}, [text, key]);
 
@@ -113,21 +113,23 @@ export function TxtToPdf({ t }) {
 		setText(await readTextFile(file));
 	};
 
-	const paper = (
-		<div class="pdf-textpaper pdf-textpaper--edit">
-			<label class="pdf-visually-hidden" for="pdf-txt-area">{t('txt.label')}</label>
-			<textarea id="pdf-txt-area" class="pdf-textpaper-area" value={text} placeholder={t('txt.ph')} spellcheck={true} onInput={e => edit(setText)(e.currentTarget.value)} />
-		</div>
-	);
+	// CV Oluşturucu gibi: solda PDF'in kendisi yazdıkça güncellenir, sağda yazı alanı ve ayarlar
+	const preview = box => (empty
+		? <p class="pdf-info pdf-info--canvas" role="status"><Icon name="type" size={18} />{t('txt.previewHint')}</p>
+		: <BytesPages bytes={livePdf && livePdf.bytes} width={Math.min(box.w, 640)} t={t} />);
 
 	return (
 		<Workspace
 			t={t}
-			canvas={paper}
-			action={{ label: t('txt.go'), onClick: run, busy, info: preview ? t('pages', preview.pages) : '' }}
+			canvas={preview}
+			action={{ label: t('txt.go'), onClick: run, busy, info: livePdf ? t('pages', livePdf.pages) : '' }}
 			result={result && { meta: `${t('pages', result.pages)} · ${fmtSize(result.bytes.length)}`, onDownload: () => download(result.bytes, `${safeName(titleOf(text) || t('txt.file'))}.pdf`, 'application/pdf'), onEdit: () => setResult(null), onAgain: () => { setText(''); setResult(null); } }}
 			error={error}
 		>
+			<div class="pdf-field">
+				<label class="pdf-label" for="pdf-txt-area">{t('txt.label')}</label>
+				<textarea id="pdf-txt-area" class="pdf-input pdf-input--multi pdf-txt-area" value={text} placeholder={t('txt.ph')} spellcheck={true} onInput={e => edit(setText)(e.currentTarget.value)} />
+			</div>
 			<div class="pdf-field">
 				<button type="button" class="pdfb pdfb--secondary pdfb--block" onClick={() => picker.current && picker.current.click()}><Icon name="upload" size={18} />{t('txt.open')}</button>
 				<input ref={picker} class="pdf-visually-hidden" type="file" accept=".txt,.md,.markdown,text/plain,text/markdown" tabIndex={-1} aria-label={t('txt.open')} onChange={(e) => { open(e.currentTarget.files[0]); e.currentTarget.value = ''; }} />
@@ -137,7 +139,6 @@ export function TxtToPdf({ t }) {
 			<Radios name="pdf-txt-margin" legend={t('i2p.margin')} value={margin} onChange={edit(setMargin)} options={[{ value: 'm1', label: t('txt.m1') }, { value: 'm2', label: t('i2p.m2') }, { value: 'm3', label: t('txt.m3') }]} />
 			<Check checked={md} onChange={edit(setMd)} label={t('txt.md')} />
 			<Check checked={numbers} onChange={edit(setNumbers)} label={t('txt.numbers')} />
-			{preview ? <ResultPreview bytes={preview.bytes} t={t} max={1} /> : null}
 		</Workspace>
 	);
 }

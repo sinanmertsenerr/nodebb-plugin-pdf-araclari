@@ -17,8 +17,27 @@ export function pageFrame(page) {
 		if (rot === 270) return { x: box.x + vy, y: box.y + H - vx };
 		return { x: box.x + vx, y: box.y + vy };
 	};
+	// Tersi: pdf-lib koordinatı -> görünen sayfa (sol alttan)
+	const fromPdf = (x, y) => {
+		const dx = x - box.x;
+		const dy = y - box.y;
+		if (rot === 90) return { x: dy, y: W - dx };
+		if (rot === 180) return { x: W - dx, y: H - dy };
+		if (rot === 270) return { x: H - dy, y: dx };
+		return { x: dx, y: dy };
+	};
 	const sideways = rot === 90 || rot === 270;
-	return { w: sideways ? H : W, h: sideways ? W : H, rot, toPdf };
+	return { w: sideways ? H : W, h: sideways ? W : H, rot, toPdf, fromPdf };
+}
+
+// pdf-lib dik dörtgeni -> görünen sayfada sol üstten (y aşağı) kutu: form alanını önizlemede doğru yere koymak için
+export function rectFromPdf(frame, r) {
+	const a = frame.fromPdf(r.x, r.y);
+	const b = frame.fromPdf(r.x + r.width, r.y + r.height);
+	const x = Math.min(a.x, b.x);
+	const w = Math.abs(b.x - a.x);
+	const h = Math.abs(b.y - a.y);
+	return { x, y: frame.h - Math.max(a.y, b.y), w, h };
 }
 
 // Görünen sayfadaki dik dörtgen -> pdf-lib dik dörtgeni (dönüş 90'ın katı olduğu için kenarlar yine eksenlere paralel)
