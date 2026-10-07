@@ -1597,6 +1597,49 @@
     gap: 8px;
 }
 
+.pdf-input--multi {
+    min-height: 84px;
+    padding: 8px 12px;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.pdf-attached {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 6px 0 12px;
+    border: 1px solid var(--pdfu-line);
+    border-radius: 10px;
+    color: var(--pdfu-ink2);
+}
+
+.pdf-attached-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.pdf-attached-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pdf-textpaper--edit .pdf-textpaper-area {
+    min-height: 100%;
+}
+
+.pdf-paper--empty {
+    display: block;
+    opacity: .6;
+}
+
 // ---------- Sayfa numarası: konum seçici ve önizleme ----------
 .pdf-pospick {
     margin: 0 0 4px;

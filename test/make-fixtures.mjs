@@ -71,6 +71,16 @@ turned.getPage(2).setRotation(degrees(180));
 turned.getPage(3).setRotation(degrees(270));
 await save('donuk.pdf', await turned.save());
 
+// Koyu zeminli slaytlar (16:9): Çıktıya hazırla'nın "koyu slaytları beyaza çevir" seçeneği için
+const dark = await PDFDocument.create();
+const darkFont = await dark.embedFont(StandardFonts.HelveticaBold);
+for (let i = 1; i <= 3; i += 1) {
+	const page = dark.addPage([960, 540]);
+	page.drawRectangle({ x: 0, y: 0, width: 960, height: 540, color: rgb(0.08, 0.09, 0.12) });
+	page.drawText(`D${i}`, { x: 80, y: 260, size: 120, font: darkFont, color: rgb(0.95, 0.95, 0.95) });
+}
+await save('koyu-slaytlar.pdf', await dark.save());
+
 // PDF olmayan dosyalar
 await save('not-pdf.txt', 'bu bir PDF degil\n');
 await save('bozuk.pdf', '%PDF-1.4\nbu dosya bozuk\n');

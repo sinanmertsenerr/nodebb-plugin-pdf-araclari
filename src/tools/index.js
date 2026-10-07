@@ -12,6 +12,9 @@ import { ImgConv } from './imgconv.jsx';
 import { ImgShrink } from './imgshrink.jsx';
 import { PageNum } from './pagenum.jsx';
 import { Watermark } from './watermark.jsx';
+import { TxtToPdf } from './txt2pdf.jsx';
+import { Cover } from './cover.jsx';
+import { Handout } from './handout.jsx';
 
 export const GROUPS = ['basic', 'convert', 'edit', 'secure', 'student', 'scan'];
 
@@ -26,7 +29,7 @@ export const TOOLS = [
 	{ id: 'pdf2txt', group: 'convert', icon: 'file-text', component: PdfToTxt },
 	{ id: 'imgconv', group: 'convert', icon: 'swap', component: ImgConv },
 	{ id: 'imgshrink', group: 'convert', icon: 'image-minus', component: ImgShrink },
-	{ id: 'txt2pdf', group: 'convert', icon: 'type' },
+	{ id: 'txt2pdf', group: 'convert', icon: 'type', component: TxtToPdf, steps: ['step.write', 'step.2', 'step.3'] },
 
 	{ id: 'edit', group: 'edit', icon: 'edit' },
 	{ id: 'sign', group: 'edit', icon: 'signature' },
@@ -36,8 +39,8 @@ export const TOOLS = [
 	{ id: 'protect', group: 'secure', icon: 'lock', component: Protect },
 	{ id: 'unlock', group: 'secure', icon: 'unlock', component: Unlock },
 
-	{ id: 'handout', group: 'student', icon: 'printer' },
-	{ id: 'cover', group: 'student', icon: 'book' },
+	{ id: 'handout', group: 'student', icon: 'printer', component: Handout },
+	{ id: 'cover', group: 'student', icon: 'book', component: Cover, steps: ['step.fill', 'step.2', 'step.3'] },
 
 	{ id: 'scan', group: 'scan', icon: 'scan' },
 ];

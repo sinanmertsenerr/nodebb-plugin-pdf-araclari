@@ -2,6 +2,7 @@
 // Yaygın PDF araçlarındaki düzen: kişi neyi değiştirdiğini önizlemede görür, düğmeyi her araçta aynı yerde bulur.
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 import { notify } from '../notify.js';
+import { getPdfjs } from '../pdf.js';
 import { Icon } from './icons.jsx';
 import { useStepMark } from './steps.jsx';
 import { ErrorLine, Thumb } from './common.jsx';
@@ -134,4 +135,21 @@ export function PagePaper({ doc, page = 1, width, children, caption }) {
 			{caption ? <figcaption class="pdf-paper-cap">{caption}</figcaption> : null}
 		</figure>
 	);
+}
+
+// Üretilen PDF'in ilk sayfası kâğıt olarak (canlı önizleme: Ödev kapağı, Çıktıya hazırla)
+export function BytesPaper({ bytes, width, page = 1, caption }) {
+	const [doc, setDoc] = useState(null);
+	useEffect(() => {
+		if (!bytes) return undefined;
+		let dead = false;
+		let task = null;
+		getPdfjs().then(({ getDocument }) => {
+			task = getDocument({ data: bytes.slice(), isEvalSupported: false });
+			return task.promise;
+		}).then((d) => { if (!dead) setDoc(d); }).catch(() => {});
+		return () => { dead = true; if (task) { try { task.destroy(); } catch (e) { /* kapanmışsa önemli değil */ } } };
+	}, [bytes]);
+	if (!doc) return <div class="pdf-paper pdf-paper--empty" style={{ width: `${width}px`, height: `${Math.round(width * 1.414)}px` }} />;
+	return <PagePaper doc={doc} page={page} width={width} caption={caption} />;
 }
