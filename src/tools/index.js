@@ -15,6 +15,7 @@ import { Watermark } from './watermark.jsx';
 import { TxtToPdf } from './txt2pdf.jsx';
 import { Cover } from './cover.jsx';
 import { Handout } from './handout.jsx';
+import { Edit, Sign } from './edit.jsx';
 
 export const GROUPS = ['basic', 'convert', 'edit', 'secure', 'student', 'scan'];
 
@@ -31,8 +32,8 @@ export const TOOLS = [
 	{ id: 'imgshrink', group: 'convert', icon: 'image-minus', component: ImgShrink },
 	{ id: 'txt2pdf', group: 'convert', icon: 'type', component: TxtToPdf, steps: ['step.write', 'step.2', 'step.3'] },
 
-	{ id: 'edit', group: 'edit', icon: 'edit' },
-	{ id: 'sign', group: 'edit', icon: 'signature' },
+	{ id: 'edit', group: 'edit', icon: 'edit', component: Edit, steps: ['step.1', 'step.edit', 'step.3'] },
+	{ id: 'sign', group: 'edit', icon: 'signature', component: Sign, steps: ['step.1', 'step.sign', 'step.3'] },
 	{ id: 'pagenum', group: 'edit', icon: 'hash', component: PageNum },
 	{ id: 'watermark', group: 'edit', icon: 'stamp', component: Watermark },
 
