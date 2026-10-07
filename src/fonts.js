@@ -109,6 +109,12 @@ export async function loadFontSet(doc) {
 			});
 		},
 		wrap: (text, maxWidth, size, bold) => wrapLines(text, maxWidth, line => set.width(line, size, bold)),
+		// Metnin bütün harflerini tek başına taşıyan yazı tipi (form alanının görünümü tek yazı tipiyle çizilir); yoksa null
+		covering(text, bold) {
+			const w = pick(bold);
+			const i = w.sets.findIndex(s => [...String(text)].every(ch => ch === '\n' || s.has(ch.codePointAt(0))));
+			return i >= 0 ? w.fonts[i] : null;
+		},
 	};
 	return set;
 }

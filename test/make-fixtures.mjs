@@ -81,6 +81,27 @@ for (let i = 1; i <= 3; i += 1) {
 }
 await save('koyu-slaytlar.pdf', await dark.save());
 
+// Form alanlı PDF (PDF düzenle / İmzala'da form doldurma için)
+const formDoc = await labelled('F', 1);
+const fpage = formDoc.getPage(0);
+const form = formDoc.getForm();
+const ad = form.createTextField('ogrenci.ad');
+ad.addToPage(fpage, { x: 60, y: 300, width: 260, height: 24 });
+const no = form.createTextField('ogrenci.numara');
+no.setMaxLength(10);
+no.addToPage(fpage, { x: 60, y: 260, width: 160, height: 24 });
+const bolum = form.createDropdown('bolum');
+bolum.addOptions(['Yazılım Mühendisliği', 'Bilgisayar Mühendisliği', 'Endüstri Mühendisliği']);
+bolum.addToPage(fpage, { x: 60, y: 220, width: 260, height: 24 });
+const sinif = form.createRadioGroup('sinif');
+['1', '2', '3', '4'].forEach((v, i) => sinif.addOptionToPage(v, fpage, { x: 60 + i * 40, y: 180, width: 18, height: 18 }));
+const onay = form.createCheckBox('onay');
+onay.addToPage(fpage, { x: 60, y: 140, width: 18, height: 18 });
+const not = form.createTextField('aciklama');
+not.enableMultiline();
+not.addToPage(fpage, { x: 60, y: 60, width: 300, height: 60 });
+await save('form.pdf', await formDoc.save());
+
 // PDF olmayan dosyalar
 await save('not-pdf.txt', 'bu bir PDF degil\n');
 await save('bozuk.pdf', '%PDF-1.4\nbu dosya bozuk\n');

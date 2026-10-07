@@ -11,30 +11,29 @@ export const assetUrl = rel => new URL(rel, base()).href;
 export const MAX_MB = 80;
 
 let pdfjs = null;
-let lib = null;
 
-export async function getPdfjs() {
-	if (pdfjs) return pdfjs;
-	const dir = new URL(`../${PDFJS_DIR}/`, base());
-	pdfjs = await import(/* @vite-ignore */ new URL('pdf.min.js', dir).href);
-	pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdf.worker.min.js', dir).href;
-	return pdfjs;
+let pdfjsLoading = null;
+export function getPdfjs() {
+	if (!pdfjsLoading) {
+		const dir = new URL(`../${PDFJS_DIR}/`, base());
+		pdfjsLoading = import(/* @vite-ignore */ new URL('pdf.min.js', dir).href).then((mod) => {
+			pdfjs = mod;
+			pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdf.worker.min.js', dir).href;
+			return pdfjs;
+		}).catch((err) => { pdfjsLoading = null; throw err; });
+	}
+	return pdfjsLoading;
 }
 
-export async function getLib() {
-	if (lib) return lib;
-	if (!window.YuPdfLib) {
-		const url = new URL(PDFLIB_FILE, base()).href;
-		await new Promise((resolve, reject) => {
-			const s = document.createElement('script');
-			s.src = url;
-			s.onload = resolve;
-			s.onerror = () => reject(new Error('pdf-lib'));
-			document.head.appendChild(s);
-		});
+// Aynı anda gelen istekler tek yüklemeyi bekler: kütüphane iki kez yüklenirse sınıflar ikiye ayrılır (instanceof bozulur)
+let libLoading = null;
+export function getLib() {
+	if (!libLoading) {
+		libLoading = (window.YuPdfLib ? Promise.resolve() : loadScript(new URL(PDFLIB_FILE, base()).href))
+			.then(() => window.YuPdfLib)
+			.catch((err) => { libLoading = null; throw err; });
 	}
-	lib = window.YuPdfLib;
-	return lib;
+	return libLoading;
 }
 
 function loadScript(url) {
@@ -47,13 +46,15 @@ function loadScript(url) {
 	});
 }
 
-let kit = null;
-// Yazı tipi okuyucu: yalnızca metin yazan araçlar ister
-export async function getFontkit() {
-	if (kit) return kit;
-	if (!window.YuPdfFontkit) await loadScript(assetUrl(PDFFONT_FILE));
-	kit = window.YuPdfFontkit;
-	return kit;
+let kitLoading = null;
+// Yazı tipi okuyucu: yalnızca metin yazan araçlar ister (tek yükleme)
+export function getFontkit() {
+	if (!kitLoading) {
+		kitLoading = (window.YuPdfFontkit ? Promise.resolve() : loadScript(assetUrl(PDFFONT_FILE)))
+			.then(() => window.YuPdfFontkit)
+			.catch((err) => { kitLoading = null; throw err; });
+	}
+	return kitLoading;
 }
 
 export const isPdf = file => !!file && (file.type === 'application/pdf' || /\.pdf$/i.test(file.name));

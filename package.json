@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-pdf-araclari",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Free PDF tools for NodeBB that run in the browser: merge, split, edit, sign, scan, compress, convert and more. Files never leave the device.",
   "main": "library.js",
   "repository": {

@@ -5,9 +5,10 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { download, getLib, loadClean } from '../pdf.js';
 import { loadFontSet } from '../fonts.js';
 import { hexToRgb, pageFrame, rectToPdf } from '../stamp.js';
+import { readFields, writeFields } from '../forms.js';
 import { canvasBytes, drawToCanvas, isImageFile, loadImage } from '../images.js';
 import { baseName, fmtSize, safeName } from '../util.js';
-import { Slider, Swatches, Thumb, uid } from '../ui/common.jsx';
+import { Check, Slider, Swatches, Thumb, uid } from '../ui/common.jsx';
 import { Icon } from '../ui/icons.jsx';
 import { Workspace } from '../ui/workspace.jsx';
 import { SignaturePad, savedSignature } from '../ui/SignaturePad.jsx';
@@ -66,10 +67,12 @@ function Ann({ a, hidden }) {
 }
 
 // Eklentileri pdf-lib belgesine çizer
-async function bake(opened, list) {
-	const { rgb, degrees, BlendMode, LineCapStyle } = await getLib();
+async function bake(opened, list, fields, values) {
+	const lib = await getLib();
+	const { rgb, degrees, BlendMode, LineCapStyle } = lib;
 	const doc = await loadClean(opened);
-	const fonts = list.some(a => a.type === 'text') ? await loadFontSet(doc) : null;
+	const formChanged = fields.some(f => values[f.name] !== undefined && values[f.name] !== f.value);
+	const fonts = list.some(a => a.type === 'text') || formChanged ? await loadFontSet(doc) : null;
 	const images = new Map();
 	for (const a of list) {
 		const page = doc.getPage(a.page - 1);
@@ -96,7 +99,34 @@ async function bake(opened, list) {
 			else page.drawRectangle({ ...r, borderColor: color, borderWidth: a.size });
 		}
 	}
-	return doc.save({ useObjectStreams: true });
+	if (formChanged) writeFields(doc, lib, fields, values, fonts);
+	// Form görünümleri yukarıda yazıldı; pdf-lib'in Helvetica ile yeniden çizmesi Türkçe harflerde hata verir
+	return doc.save({ useObjectStreams: true, updateFieldAppearances: false });
+}
+
+// Paneldeki form alanı
+function FormField({ t, f, value, onChange }) {
+	const id = `pdf-ff-${f.name.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+	if (f.kind === 'check') return <Check checked={!!value} onChange={onChange} label={f.label} />;
+	if (f.kind === 'radio' || f.kind === 'select') {
+		return (
+			<div class="pdf-field">
+				<label class="pdf-label" for={id}>{f.label}</label>
+				<select id={id} class="pdf-input" value={value} onChange={e => onChange(e.currentTarget.value)}>
+					<option value="">{t('form.choose')}</option>
+					{f.options.map(o => <option key={o} value={o}>{o}</option>)}
+				</select>
+			</div>
+		);
+	}
+	return (
+		<div class="pdf-field">
+			<label class="pdf-label" for={id}>{f.label}</label>
+			{f.multiline
+				? <textarea id={id} class="pdf-input pdf-input--multi" rows={3} value={value} maxLength={f.maxLength} onInput={e => onChange(e.currentTarget.value)} />
+				: <input id={id} class="pdf-input" value={value} maxLength={f.maxLength} autocomplete="off" onInput={e => onChange(e.currentTarget.value)} />}
+		</div>
+	);
 }
 
 export function Editor({ t, opened, file, onAgain, mode }) {
@@ -116,6 +146,8 @@ export function Editor({ t, opened, file, onAgain, mode }) {
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState('');
 	const [result, setResult] = useState(null);
+	const [fields, setFields] = useState([]);
+	const [values, setValues] = useState({});
 	const drag = useRef(null);
 	const picker = useRef(null);
 	const column = useRef(null);
@@ -128,6 +160,13 @@ export function Editor({ t, opened, file, onAgain, mode }) {
 			const v = p.getViewport({ scale: 1 });
 			return { w: v.width, h: v.height };
 		}))).then((s) => { if (!dead) setSizes(s); }).catch(() => { if (!dead) setError(t('err.fail')); });
+		// Form alanları (varsa panelde doldurulur)
+		Promise.all([getLib(), loadClean(opened)]).then(([lib, doc]) => {
+			if (dead) return;
+			const list = readFields(doc, lib);
+			setFields(list);
+			setValues(Object.fromEntries(list.map(f => [f.name, f.value])));
+		}).catch(() => {});
 		return () => { dead = true; };
 	}, [opened]);
 
@@ -323,14 +362,15 @@ export function Editor({ t, opened, file, onAgain, mode }) {
 		setEditing(null);
 	};
 
+	const formChanges = fields.filter(f => values[f.name] !== f.value).length;
 	const save = async () => {
 		if (editing) finishEdit();
 		const items = list.filter(a => a.type !== 'text' || a.text.trim());
-		if (!items.length) { setError(t(mode === 'sign' ? 'ed.emptySign' : 'ed.empty')); return; }
+		if (!items.length && !formChanges) { setError(t(mode === 'sign' ? 'ed.emptySign' : 'ed.empty')); return; }
 		setBusy(true);
 		setError('');
 		try {
-			const bytes = await bake(opened, items);
+			const bytes = await bake(opened, items, fields, values);
 			setResult({ bytes });
 			setSel(null);
 		} catch (err) {
@@ -405,7 +445,7 @@ export function Editor({ t, opened, file, onAgain, mode }) {
 			<Workspace
 				t={t} file={file.name} meta={`${t('pages', opened.pages)} · ${fmtSize(file.size)}`} onChangeFile={onAgain}
 				canvas={canvas}
-				action={{ label: t('ed.save'), onClick: save, busy, info: list.length ? t('ed.count', list.length) : '' }}
+				action={{ label: t('ed.save'), onClick: save, busy, info: list.length + formChanges ? t('ed.count', list.length + formChanges) : '' }}
 				result={result && { title: t(mode === 'sign' ? 'ed.signed' : 'ed.done'), meta: fmtSize(result.bytes.length), onDownload: () => download(result.bytes, `${safeName(baseName(file.name))}-${mode === 'sign' ? 'imzali' : 'duzenlenmis'}.pdf`, 'application/pdf'), onEdit: () => setResult(null), onAgain }}
 				error={error}
 			>
@@ -414,6 +454,12 @@ export function Editor({ t, opened, file, onAgain, mode }) {
 						<button type="button" class="pdfb pdfb--secondary pdfb--block" onClick={() => setPadOpen(true)}><Icon name="signature" size={18} />{t('sig.new')}</button>
 						{saved ? <button type="button" class="pdfb pdfb--secondary pdfb--block" onClick={() => addSignature(saved)}><img src={saved.url} alt="" class="pdf-ed-savedsig" />{t('sig.useSaved')}</button> : null}
 					</div>
+				) : null}
+				{fields.length ? (
+					<fieldset class="pdf-formfields">
+						<legend class="pdf-label">{t('form.title', fields.length)}</legend>
+						{fields.map(f => <FormField key={f.name} t={t} f={f} value={values[f.name]} onChange={(v) => { setValues(o => ({ ...o, [f.name]: v })); changed(); }} />)}
+					</fieldset>
 				) : null}
 				<div class="pdf-ed-tools" role="toolbar" aria-label={t('ed.tools')}>
 					{toolIds.map(id => (
