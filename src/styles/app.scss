@@ -171,12 +171,7 @@
     display: grid;
     grid-template-columns: repeat(var(--pdf-cols, 3), minmax(0, 1fr));
     gap: 16px;
-    align-items: start;
-}
-
-.pdf-home-col {
-    display: grid;
-    gap: 16px;
+    align-items: stretch;
 }
 
 .pdf-home-group {

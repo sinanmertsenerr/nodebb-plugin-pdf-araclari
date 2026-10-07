@@ -19,17 +19,11 @@ const toolFromHash = () => {
 // Aramada Türkçe harfler ve büyük/küçük harf fark etmez: "sifre" Şifre'yi, "bol" Böl'ü bulur
 const fold = s => String(s).toLocaleLowerCase('tr').replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-// Grupların sütunlara dağılımı: araç sayıları dengeli (4+2, 6+1, 4+2), ilk sıra Temel · Dönüştür · Düzenle
-const COLUMNS = {
-	3: [['basic', 'secure'], ['convert', 'scan'], ['edit', 'student']],
-	2: [['basic', 'edit', 'student'], ['convert', 'secure', 'scan']],
-	1: [GROUPS],
-};
-
 function Home({ t, onPick }) {
 	const [query, setQuery] = useState('');
 	const box = useRef(null);
 	const width = useWidth(box, 900);
+	// Satır satır ızgara: aynı satırdaki kutular aynı boyda (üstte Temel · Dönüştür · Düzenle, altta Güvenlik · Öğrenci · Tara)
 	const cols = width >= 780 ? 3 : (width >= 520 ? 2 : 1);
 	const q = fold(query.trim());
 	const shown = TOOLS.filter(x => !q || fold(`${t(`tool.${x.id}`)} ${t(`desc.${x.id}`)}`).includes(q));
@@ -47,30 +41,26 @@ function Home({ t, onPick }) {
 				</label>
 			</header>
 			<div class="pdf-home-groups" ref={box} style={{ '--pdf-cols': cols }}>
-				{COLUMNS[cols].map(column => (
-					<div class="pdf-home-col" key={column.join()}>
-						{column.map((group) => {
-							const items = shown.filter(x => x.group === group);
-							if (!items.length) return null;
-							return (
-								<section key={group} class="pdf-home-group" aria-labelledby={`pdf-g-${group}`}>
-									<h3 class="pdf-home-h" id={`pdf-g-${group}`}>{t(`group.${group}`)}</h3>
-									<ul class="pdf-tools">
-										{items.map(x => (
-											<li key={x.id}>
-												<button type="button" class="pdf-tool-link" disabled={!x.component} title={t(`desc.${x.id}`)} onClick={() => onPick(x.id)}>
-													<span class="pdf-ico-tile" aria-hidden="true"><Icon name={x.icon} size={20} /></span>
-													<span class="pdf-tool-name">{t(`tool.${x.id}`)}</span>
-													{x.component ? null : <span class="pdf-soon">{t('soon')}</span>}
-												</button>
-											</li>
-										))}
-									</ul>
-								</section>
-							);
-						})}
-					</div>
-				))}
+				{GROUPS.map((group) => {
+					const items = shown.filter(x => x.group === group);
+					if (!items.length) return null;
+					return (
+						<section key={group} class="pdf-home-group" aria-labelledby={`pdf-g-${group}`}>
+							<h3 class="pdf-home-h" id={`pdf-g-${group}`}>{t(`group.${group}`)}</h3>
+							<ul class="pdf-tools">
+								{items.map(x => (
+									<li key={x.id}>
+										<button type="button" class="pdf-tool-link" disabled={!x.component} title={t(`desc.${x.id}`)} onClick={() => onPick(x.id)}>
+											<span class="pdf-ico-tile" aria-hidden="true"><Icon name={x.icon} size={20} /></span>
+											<span class="pdf-tool-name">{t(`tool.${x.id}`)}</span>
+											{x.component ? null : <span class="pdf-soon">{t('soon')}</span>}
+										</button>
+									</li>
+								))}
+							</ul>
+						</section>
+					);
+				})}
 			</div>
 			{shown.length ? null : <p class="pdf-home-none" role="status">{t('home.none')}</p>}
 		</div>
