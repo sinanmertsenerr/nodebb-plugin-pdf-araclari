@@ -16,6 +16,7 @@ import { TxtToPdf } from './txt2pdf.jsx';
 import { Cover } from './cover.jsx';
 import { Handout } from './handout.jsx';
 import { Edit, Sign } from './edit.jsx';
+import { Scan } from './scan.jsx';
 
 export const GROUPS = ['basic', 'convert', 'edit', 'secure', 'student', 'scan'];
 
@@ -43,5 +44,5 @@ export const TOOLS = [
 	{ id: 'handout', group: 'student', icon: 'printer', component: Handout },
 	{ id: 'cover', group: 'student', icon: 'book', component: Cover, steps: ['step.fill', 'step.2', 'step.3'] },
 
-	{ id: 'scan', group: 'scan', icon: 'scan' },
+	{ id: 'scan', group: 'scan', icon: 'scan', component: Scan, steps: ['step.photo', 'step.2', 'step.3'] },
 ];

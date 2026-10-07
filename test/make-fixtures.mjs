@@ -145,6 +145,17 @@ try {
 	const exif = Buffer.from('FFE1002245786966000049492A00080000000100120103000100000006000000000000000000', 'hex');
 	const noApp = jpg[2] === 0xFF && jpg[3] === 0xE0 ? 4 + jpg.readUInt16BE(4) : 2; // JFIF varsa onun ardına
 	writeFileSync(`${tmp}foto-exif6.jpg`, Buffer.concat([jpg.subarray(0, noApp), exif, jpg.subarray(noApp)]));
+	// Belge fotoğrafı (Tara için): koyu masada eğik duran, bir yanı gölgeli kâğıt; üstünde yazı satırları
+	const inQuad = (q, x, y) => q.every((a, i) => { const b = q[(i + 1) % 4]; return (b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) >= 0; });
+	const paper = [[180, 140], [1010, 230], [930, 1420], [110, 1330]];
+	await save('belge-foto.png', pngRaw(1200, 1600, (x, y) => {
+		if (!inQuad(paper, x, y)) return [52 + ((x * 3 + y) % 7), 58, 70];
+		const shade = 238 - Math.max(0, (x - 500)) * 0.06 - y * 0.012;
+		const line = (y - 300) % 70 < 9 && y > 300 && y < 1200 && x > 260 && x < 860 - ((y / 70) % 3) * 90;
+		return line ? [40, 42, 48] : [shade, shade - 2, shade - 8];
+	}));
+	execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '88', `${tmp}belge-foto.png`, '--out', `${tmp}belge-foto.jpg`], { stdio: 'ignore' });
+	rmSync(`${tmp}belge-foto.png`);
 	try { execFileSync('sips', ['-s', 'format', 'webp', `${tmp}yatay.png`, '--out', `${tmp}resim.webp`], { stdio: 'ignore' }); } catch (e) { /* bu sips WebP yazamıyor */ }
 	console.log('resim dosyaları hazır');
 } catch (err) {

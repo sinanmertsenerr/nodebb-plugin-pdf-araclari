@@ -1774,6 +1774,104 @@
     }
 }
 
+// ---------- Tara ----------
+.pdf-scan {
+    display: grid;
+    justify-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.pdf-scan-stage {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(16, 32, 42, .14), 0 12px 32px -16px rgba(16, 32, 42, .32);
+
+    img {
+        display: block;
+        user-select: none;
+    }
+}
+
+.pdf-scan-layer {
+    position: absolute;
+    inset: 0;
+    touch-action: none;
+}
+
+.pdf-scan-shade {
+    fill: rgba(16, 20, 24, .45);
+    pointer-events: none;
+}
+
+.pdf-scan-quad {
+    fill: none;
+    stroke: var(--pdfu-accent);
+    pointer-events: none;
+}
+
+.pdf-scan-handle {
+    fill: rgba(255, 255, 255, .92);
+    stroke: var(--pdfu-accent);
+    cursor: grab;
+    touch-action: none;
+
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.pdf-scan-result img {
+    display: block;
+}
+
+.pdf-scan-strip {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    .pdf-drop--compact {
+        height: 92px;
+        margin: 0;
+        padding: 0 12px;
+        background-color: var(--pdfu-card);
+    }
+}
+
+.pdf-scan-thumb {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 92px;
+    padding: 4px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background-color: var(--pdfu-card);
+    cursor: pointer;
+
+    img {
+        max-width: 60px;
+        max-height: 70px;
+        object-fit: contain;
+    }
+
+    .pdf-tile-label {
+        position: absolute;
+        bottom: 2px;
+        font-size: 12px;
+    }
+
+    &.is-current {
+        border-color: var(--pdfu-accent);
+    }
+}
+
 // ---------- Pencere (imza) ----------
 .pdf-modal {
     position: fixed;
