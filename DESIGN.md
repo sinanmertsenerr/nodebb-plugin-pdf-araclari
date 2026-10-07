@@ -25,6 +25,16 @@ colors:
   watermark-blue: "#2563eb"
   watermark-violet: "#7c3aed"
   watermark-black: "#111827"
+  cover-navy: "#1e3a8a"
+  cover-maroon: "#7f1d1d"
+  cover-green: "#14532d"
+  edit-blue: "#1d4ed8"
+  edit-green: "#15803d"
+  highlight: "#facc15"
+  line: "rgba(16, 32, 42, .12)"
+  hover: "rgba(16, 32, 42, .045)"
+  line-dark-theme: "rgba(255, 255, 255, .12)"
+  scrim: "rgba(16, 20, 24, .45)"
 typography:
   body:
     fontFamily: "Inter"

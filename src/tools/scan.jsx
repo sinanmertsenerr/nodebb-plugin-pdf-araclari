@@ -87,7 +87,7 @@ function Stage({ t, page, box, onCorners }) {
 			<svg ref={svg} class="pdf-scan-layer" viewBox={`0 0 ${nw} ${nh}`} width={dw} height={dh} onPointerMove={move} onPointerUp={up} onPointerCancel={up} role="group" aria-label={t('scan.corners')}>
 				<path d={`M0 0H${nw}V${nh}H0Z M${c[0].join(' ')} L${c[1].join(' ')} L${c[2].join(' ')} L${c[3].join(' ')} Z`} fill-rule="evenodd" class="pdf-scan-shade" />
 				<polygon points={quad} class="pdf-scan-quad" stroke-width={2 / k} />
-				{c.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={13 / k} class="pdf-scan-handle" stroke-width={2.5 / k} onPointerDown={down(i)} aria-label={t(`scan.corner${i}`)} />)}
+				{c.map((p, i) => <circle key={i} cx={p[0]} cy={p[1]} r={13 / k} class="pdf-scan-handle" stroke-width={2.5 / k} onPointerDown={down(i)} aria-hidden="true" />)}
 			</svg>
 		</div>
 	);

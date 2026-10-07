@@ -1,11 +1,14 @@
 {
 	"id": "nodebb-plugin-pdf-araclari",
 	"name": "PDF Araçları",
-	"description": "Free PDF tools that run in the browser: merge, split, reorder, compress and more. Files never leave the device.",
+	"description": "Free PDF tools that run in the browser: merge, split, edit, sign, scan, compress, convert and more. Files never leave the device.",
 	"url": "https://github.com/sinanmertsenerr/nodebb-plugin-pdf-araclari",
 	"library": "./library.js",
 	"hooks": [
-		{ "hook": "static:app.load", "method": "init" }
+		{
+			"hook": "static:app.load",
+			"method": "init"
+		}
 	],
 	"modules": {
 		"../client/pdf.js": "static/lib/page.js"

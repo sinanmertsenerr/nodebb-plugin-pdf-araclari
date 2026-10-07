@@ -66,7 +66,7 @@ export function Workspace({ t, file, meta, onChangeFile, canvas, children, actio
 
 	return (
 		<div class="pdf-ws" ref={root}>
-			<div class="pdf-ws-canvas" ref={area}>
+			<div class="pdf-ws-canvas" ref={area} tabIndex={0} role="region" aria-label={t('ws.canvas')}>
 				<div class="pdf-ws-canvas-in">{typeof canvas === 'function' ? canvas(box) : canvas}</div>
 			</div>
 			<aside class="pdf-ws-panel" aria-label={t('ws.panel')}>
