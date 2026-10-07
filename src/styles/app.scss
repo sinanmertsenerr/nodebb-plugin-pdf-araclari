@@ -2313,6 +2313,11 @@
         border-radius: 0 0 12px 12px;
         background-color: var(--pdfu-card);
     }
+
+    // Forumun telefon sekme çubuğu (yapp-dock: 65 px yükseklik, alttan 10 px) ana düğmeyi örtmesin
+    html.yapp-on .pdf-ws-foot {
+        bottom: calc(83px + env(safe-area-inset-bottom));
+    }
 }
 
 // Dar telefonda yalnız geçerli adımın adı yazılır
